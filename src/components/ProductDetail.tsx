@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, Box, ShoppingCart, Tag, Info, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Box, Tag, Info, AlertTriangle, Trash2 } from 'lucide-react';
+import { ProductFormModal } from './ProductFormModal';
+import { useParams, useNavigate } from 'react-router-dom';
 
 interface ProductDetailProps {
-  productId: string;
-  onBack: () => void;
+  isAuthenticated?: boolean;
+  userRole?: 'admin' | 'empleado' | null;
 }
 
 interface Product {
@@ -12,38 +14,82 @@ interface Product {
   name: string;
   description: string;
   category?: string;
+  sku?: string;
+  slug?: string;
   stock: number;
   image_url: string;
   created_at: string;
+  user_id?: string;
+  updated_by?: string;
+  creatorEmail?: string;
+  editorEmail?: string;
 }
 
-export function ProductDetail({ productId, onBack }: ProductDetailProps) {
+export function ProductDetail({ isAuthenticated = false, userRole = null }: ProductDetailProps) {
+  const { id: slugOrId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchProductDetails() {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('id', productId)
-          .single();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-        if (error) throw error;
-        setProduct(data);
-      } catch (err: any) {
-        console.error('Error fetching product details:', err);
-        setError('No se pudo cargar la información de este artículo. Es posible que haya sido eliminado.');
-      } finally {
-        setLoading(false);
+  const fetchProductDetails = async () => {
+    try {
+      setLoading(true);
+
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId || '');
+
+      let query = supabase.from('products').select('*');
+      if (isUuid) {
+        query = query.eq('id', slugOrId);
+      } else {
+        query = query.eq('slug', slugOrId);
+      }
+
+      const { data, error } = await query.single();
+
+      if (error) throw error;
+
+      let creatorEmail = '';
+      let editorEmail = '';
+
+      if (userRole === 'admin') {
+        if (data.user_id) {
+          const creatorData = await supabase.from('user_profiles').select('email').eq('id', data.user_id).single();
+          creatorEmail = creatorData.data?.email || 'Desconocido';
+        }
+        if (data.updated_by) {
+          const editorData = await supabase.from('user_profiles').select('email').eq('id', data.updated_by).single();
+          editorEmail = editorData.data?.email || 'Desconocido';
+        }
+      }
+
+      setProduct({ ...data, creatorEmail, editorEmail });
+    } catch (err: any) {
+      console.error('Error fetching product details:', err);
+      setError('No se pudo cargar la información de este artículo. Es posible que haya sido eliminado.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProductDetails();
+  }, [slugOrId, userRole]);
+
+  const handleDelete = async () => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+      try {
+        const { error: deleteError } = await supabase.from('products').delete().eq('id', product!.id);
+        if (deleteError) throw deleteError;
+        navigate('/');
+      } catch (err) {
+        console.error('Error eliminando producto:', err);
+        alert('Ocurrió un error al intentar eliminar el producto.');
       }
     }
-
-    fetchProductDetails();
-  }, [productId]);
+  };
 
   if (loading) {
     return (
@@ -60,8 +106,8 @@ export function ProductDetail({ productId, onBack }: ProductDetailProps) {
         <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
         <h2 className="text-xl font-bold text-gray-900 mb-2">Error al cargar</h2>
         <p className="text-gray-600 mb-6">{error}</p>
-        <button 
-          onClick={onBack}
+        <button
+          onClick={() => navigate('/')}
           className="inline-flex items-center text-blue-600 font-medium hover:text-blue-800 transition-colors"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -71,14 +117,13 @@ export function ProductDetail({ productId, onBack }: ProductDetailProps) {
     );
   }
 
-  // Generamos un SKU falso más presentable usando partes del ID real
-  const sku = product.id.split('-')[0].toUpperCase();
+  const sku = product.sku || 'N/A';
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Barra de Navegación Superior */}
-      <button 
-        onClick={onBack}
+      <button
+        onClick={() => navigate('/')}
         className="group inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors"
       >
         <div className="bg-white p-1.5 rounded-full shadow-sm border border-gray-100 mr-3 group-hover:border-blue-200 group-hover:bg-blue-50 transition-colors">
@@ -89,13 +134,13 @@ export function ProductDetail({ productId, onBack }: ProductDetailProps) {
 
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-2">
-          
+
           {/* Columna Izquierda: Imagen */}
           <div className="bg-gray-50/50 p-6 lg:p-12 border-b lg:border-b-0 lg:border-r border-gray-100 flex items-center justify-center min-h-[300px] lg:min-h-[500px]">
             {product.image_url ? (
-              <img 
-                src={product.image_url} 
-                alt={product.name} 
+              <img
+                src={product.image_url}
+                alt={product.name}
                 className="max-w-full max-h-[400px] object-contain drop-shadow-md rounded-lg transition-transform hover:scale-105 duration-500"
               />
             ) : (
@@ -146,32 +191,71 @@ export function ProductDetail({ productId, onBack }: ProductDetailProps) {
                     </span>
                   </div>
                 </div>
-                
-                <div className="text-right">
-                  <p className="text-sm text-gray-500 font-medium mb-1">Alta de Registro</p>
-                  <p className="text-gray-900 font-medium">
-                    {new Date(product.created_at).toLocaleDateString()}
-                  </p>
-                </div>
+
+                {isAuthenticated && (
+                  <div className="text-right">
+                    <p className="text-sm text-gray-500 font-medium mb-1">Alta de Registro</p>
+                    <p className="text-gray-900 font-medium">
+                      {new Date(product.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button 
-                  disabled={product.stock === 0}
-                  className="w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
-                >
-                  <ShoppingCart className="h-5 w-5 mr-no mr-2" />
-                  Ingresar Stock
-                </button>
-                <button className="w-full flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-all">
-                  Editar Detalles
-                </button>
-              </div>
+              {isAuthenticated && (
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="w-full flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-all"
+                  >
+                    Editar Detalles
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="w-full flex items-center justify-center px-6 py-3 border border-red-300 text-base font-medium rounded-xl text-red-600 bg-white hover:bg-red-50 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 shadow-sm transition-all"
+                  >
+                    <Trash2 className="h-5 w-5 mr-2" />
+                    Eliminar Producto
+                  </button>
+                </div>
+              )}
             </div>
+
+            {/* Panel de Auditoría para Admin */}
+            {userRole === 'admin' && (
+              <div className="mt-6 bg-yellow-50/80 border border-yellow-200 rounded-2xl p-5 shadow-sm">
+                <h4 className="text-sm font-bold text-yellow-800 uppercase tracking-wider mb-3 flex items-center">
+                  <Info className="h-4 w-4 mr-2" />
+                  Registro de Auditoría (Solo Administradores)
+                </h4>
+                <div className="space-y-2 text-sm text-yellow-900">
+                  <div className="flex justify-between">
+                    <span className="font-medium">Creado por:</span>
+                    <span>{product.creatorEmail || 'No registrado'}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-yellow-200/50 pt-2">
+                    <span className="font-medium">Última edición:</span>
+                    <span>{product.editorEmail || 'Nunca editado'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
           </div>
         </div>
       </div>
+
+      {product && (
+        <ProductFormModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSuccess={() => {
+            setIsEditModalOpen(false);
+            fetchProductDetails();
+          }}
+          initialProduct={product}
+        />
+      )}
     </div>
   );
 }

@@ -43,7 +43,7 @@ export function Footer() {
 
         <div className="mt-10 pt-6 flex justify-center">
           <p className="text-gray-800 font-bold text-sm text-center">
-            Copyright 2025, Tu empresa Mx | Powered by Vtex
+            Copyright 2025, Tu empresa Mx | Powered by CUBI Servicios
           </p>
         </div>
       </div>

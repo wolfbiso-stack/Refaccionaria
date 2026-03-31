@@ -2,23 +2,57 @@ import React, { useState } from 'react';
 import { X, Save, PackagePlus, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
+interface Product {
+  id?: string;
+  name: string;
+  category?: string;
+  sku?: string;
+  slug?: string;
+  description: string;
+  stock: number;
+  image_url?: string;
+}
+
 interface ProductFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  initialProduct?: Product | null;
 }
 
-export function ProductFormModal({ isOpen, onClose, onSuccess }: ProductFormModalProps) {
+export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }: ProductFormModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
     category: '',
+    sku: '',
     description: '',
     stock: 0,
-    image_url: ''
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      if (initialProduct) {
+        setFormData({
+          name: initialProduct.name,
+          category: initialProduct.category || '',
+          sku: initialProduct.sku || '',
+          description: initialProduct.description || '',
+          stock: initialProduct.stock,
+        });
+        setImagePreview(initialProduct.image_url || null);
+      } else {
+        setFormData({ name: '', category: '', sku: '', description: '', stock: 0 });
+        setImagePreview(null);
+      }
+      setImageFile(null);
+      setError(null);
+    }
+  }, [isOpen, initialProduct]);
 
   if (!isOpen) return null;
 
@@ -28,6 +62,21 @@ export function ProductFormModal({ isOpen, onClose, onSuccess }: ProductFormModa
       ...prev,
       [name]: name === 'stock' ? (value === '' ? '' : Number(value)) : value
     }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setImageFile(null);
+      setImagePreview(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,24 +90,73 @@ export function ProductFormModal({ isOpen, onClose, onSuccess }: ProductFormModa
       setLoading(false);
       return;
     }
+    if (!formData.sku.trim()) {
+      setError('El SKU del producto es obligatorio para generar la URL.');
+      setLoading(false);
+      return;
+    }
 
     try {
-      const { error: supabaseError } = await supabase
-        .from('products')
-        .insert([
-          {
-            name: formData.name,
-            category: formData.category || null,
-            description: formData.description || null,
-            stock: Number(formData.stock) || 0,
-            image_url: formData.image_url || null
-          }
-        ]);
+      let finalImageUrl = null;
 
-      if (supabaseError) throw supabaseError;
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('productos')
+          .upload(filePath, imageFile, {
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('productos')
+          .getPublicUrl(filePath);
+
+        finalImageUrl = publicUrl;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const generateSlug = (name: string, sku: string) => {
+        const base = `${name}-${sku}`;
+        return base.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      };
+
+      const slug = generateSlug(formData.name, formData.sku);
+
+      const productPayload = {
+        name: formData.name,
+        category: formData.category || null,
+        sku: formData.sku,
+        slug: slug,
+        description: formData.description || null,
+        stock: Number(formData.stock) || 0,
+        ...(finalImageUrl !== null && { image_url: finalImageUrl }),
+      };
+
+      if (initialProduct && initialProduct.id) {
+        const { error: supabaseError } = await supabase
+          .from('products')
+          .update({ ...productPayload, ...(user && { updated_by: user.id }) })
+          .eq('id', initialProduct.id);
+
+        if (supabaseError) throw supabaseError;
+      } else {
+        const { error: supabaseError } = await supabase
+          .from('products')
+          .insert([{ ...productPayload, ...(user && { user_id: user.id }) }]);
+
+        if (supabaseError) throw supabaseError;
+      }
 
       // Success
-      setFormData({ name: '', category: '', description: '', stock: 0, image_url: '' });
+      setFormData({ name: '', category: '', sku: '', description: '', stock: 0 });
+      setImageFile(null);
+      setImagePreview(null);
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -72,7 +170,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess }: ProductFormModa
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       ></div>
@@ -82,9 +180,11 @@ export function ProductFormModal({ isOpen, onClose, onSuccess }: ProductFormModa
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <div className="flex items-center gap-2 text-gray-800">
             <PackagePlus className="h-5 w-5 text-blue-600" />
-            <h3 className="text-lg font-bold">Nuevo Producto</h3>
+            <h3 className="text-lg font-bold">
+              {initialProduct ? 'Editar Producto' : 'Nuevo Producto'}
+            </h3>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors"
           >
@@ -113,6 +213,22 @@ export function ProductFormModal({ isOpen, onClose, onSuccess }: ProductFormModa
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
                 placeholder="Ej: Balatas Delanteras Vento"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1">
+                SKU / Número de Parte <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="sku"
+                name="sku"
+                value={formData.sku}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                placeholder="Ej: BVS-9921"
                 required
               />
             </div>
@@ -172,18 +288,26 @@ export function ProductFormModal({ isOpen, onClose, onSuccess }: ProductFormModa
             </div>
 
             <div>
-              <label htmlFor="image_url" className="block text-sm font-medium text-gray-700 mb-1">
-                URL de la Imagen <span className="text-gray-400 font-normal">(Opcional)</span>
+              <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
+                Imagen del Producto <span className="text-gray-400 font-normal">(Opcional)</span>
               </label>
-              <input
-                type="url"
-                id="image_url"
-                name="image_url"
-                value={formData.image_url}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
-                placeholder="https://ejemplo.com/imagen.jpg"
-              />
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    id="image"
+                    name="image"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                </div>
+                {imagePreview && (
+                  <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-gray-200">
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -202,11 +326,11 @@ export function ProductFormModal({ isOpen, onClose, onSuccess }: ProductFormModa
               className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
             >
               {loading ? (
-                <>Guardando...</>
+                <>{initialProduct ? 'Actualizando...' : 'Guardando...'}</>
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  Guardar Producto
+                  {initialProduct ? 'Actualizar Producto' : 'Guardar Producto'}
                 </>
               )}
             </button>
