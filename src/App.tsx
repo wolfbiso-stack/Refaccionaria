@@ -73,6 +73,7 @@ function App() {
             <>
               <ProductGrid
                 isAuthenticated={isAuthenticated}
+                userRole={userRole}
               />
             </>
           } />

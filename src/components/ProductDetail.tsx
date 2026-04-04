@@ -107,7 +107,7 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
         <h2 className="text-xl font-bold text-gray-900 mb-2">Error al cargar</h2>
         <p className="text-gray-600 mb-6">{error}</p>
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate(-1)}
           className="inline-flex items-center text-blue-600 font-medium hover:text-blue-800 transition-colors"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -123,7 +123,7 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Barra de Navegación Superior */}
       <button
-        onClick={() => navigate('/')}
+        onClick={() => navigate(-1)}
         className="group inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors"
       >
         <div className="bg-white p-1.5 rounded-full shadow-sm border border-gray-100 mr-3 group-hover:border-blue-200 group-hover:bg-blue-50 transition-colors">

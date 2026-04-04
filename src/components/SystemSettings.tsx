@@ -27,6 +27,7 @@ interface UpdateItem {
 interface InsertItem {
     id: string; // Fake ID for react keys
     name: string;
+    description?: string;
     sku: string;
     stock: number;
     category: string;
@@ -158,7 +159,7 @@ export function SystemSettings() {
                 let rawStock = 0;
 
                 for (const [key, val] of Object.entries(row)) {
-                    const upperKey = key.toUpperCase();
+                    const upperKey = key.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                     if (upperKey.includes('SKU') || upperKey === 'CODIGO' || upperKey.includes('CLAVE')) {
                         rawSku = String(val).trim();
                     } else if (upperKey.includes('CANTIDAD') || upperKey.includes('STOCK') || upperKey.includes('EXIS')) {
@@ -219,18 +220,23 @@ export function SystemSettings() {
 
             rowsToInsert.forEach((ex, idx) => {
                 let nameVal = '';
+                let descVal = '';
                 let catVal = 'Sin Categoría';
 
                 for (const [key, val] of Object.entries(ex.originalRow)) {
-                    const upperKey = key.toUpperCase();
+                    const upperKey = key.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                     if (upperKey.includes('NOMBRE') || upperKey.includes('PRODUCTO') || upperKey.includes('DESCRIPCION')) {
                         nameVal = String(val).trim();
+                        descVal = String(val).trim();
                     } else if (upperKey.includes('CATEGOR') || upperKey.includes('FAMILIA')) {
                         catVal = String(val).trim() || 'Sin Categoría';
                     }
                 }
 
-                if (!nameVal) nameVal = `Producto ${ex.sku}`;
+                if (!nameVal) {
+                    nameVal = `Producto ${ex.sku}`;
+                    descVal = `Producto ${ex.sku}`;
+                }
                 
                 let slugVal = generateSlug(nameVal, ex.sku);
                 let attempt = 1;
@@ -243,6 +249,7 @@ export function SystemSettings() {
                 toInsert.push({
                     id: `new-${idx}`,
                     name: nameVal,
+                    description: descVal,
                     sku: ex.sku,
                     stock: ex.stock,
                     category: catVal,

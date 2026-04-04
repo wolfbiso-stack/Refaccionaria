@@ -32,32 +32,46 @@ export function Dashboard() {
                 const { data: profilesData } = await supabase.from('user_profiles').select('id, email');
                 const profilesMap = new Map(profilesData?.map(p => [p.id, p.email]));
 
-                // Obtener productos
-                const { data: productsData } = await supabase
+                // Obtener métrica total usando count exacto
+                const { count: totalProducts } = await supabase
+                    .from('products')
+                    .select('*', { count: 'exact', head: true });
+
+                // Obtener métrica de stock bajo usando count exacto
+                const { count: lowStock } = await supabase
+                    .from('products')
+                    .select('*', { count: 'exact', head: true })
+                    .lte('stock', 5);
+
+                setMetrics({ 
+                    totalProducts: totalProducts || 0, 
+                    lowStock: lowStock || 0 
+                });
+
+                // Obtener solo los 4 más recientes
+                const { data: latestAddedData } = await supabase
                     .from('products')
                     .select('*')
-                    .order('created_at', { ascending: false });
+                    .order('created_at', { ascending: false })
+                    .limit(4);
 
-                if (!productsData) return;
-
-                // Metrics base
-                const totalProducts = productsData.length;
-                const lowStock = productsData.filter(p => p.stock <= 5).length;
-
-                setMetrics({ totalProducts, lowStock });
+                // Obtener solo los 4 recientemente editados
+                const { data: latestEditedData } = await supabase
+                    .from('products')
+                    .select('*')
+                    .not('updated_by', 'is', null)
+                    .order('created_at', { ascending: false })
+                    .limit(4);
 
                 // Mapear perfiles al vuelo
-                const mappedProducts = productsData.map(p => ({
+                const mapProfiles = (list: any[]) => (list || []).map(p => ({
                     ...p,
                     creatorEmail: p.user_id ? (profilesMap.get(p.user_id) || 'Desconocido') : 'No registrado',
                     editorEmail: p.updated_by ? (profilesMap.get(p.updated_by) || 'Desconocido') : 'Nunca editado',
                 }));
 
-                setLatestAdded(mappedProducts.slice(0, 4));
-
-                // Últimas ediciones (aquellos que tengan updated_by)
-                const editedOnly = mappedProducts.filter(p => p.updated_by).slice(0, 4);
-                setLatestEdited(editedOnly);
+                setLatestAdded(mapProfiles(latestAddedData || []));
+                setLatestEdited(mapProfiles(latestEditedData || []));
 
             } catch (error) {
                 console.error("Error loading dashboard data:", error);

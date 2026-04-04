@@ -17,12 +17,14 @@ interface Product {
 
 interface ProductGridProps {
   isAuthenticated?: boolean;
+  userRole?: 'admin' | 'empleado' | null;
 }
 
-export function ProductGrid({ isAuthenticated = false }: ProductGridProps) {
+export function ProductGrid({ isAuthenticated = false, userRole = null }: ProductGridProps) {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
+  const sortBy = searchParams.get('sort') || 'created_at-desc';
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -34,7 +36,13 @@ export function ProductGrid({ isAuthenticated = false }: ProductGridProps) {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, sortBy]);
+
+  const handleSortChange = (newSort: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('sort', newSort);
+    setSearchParams(params);
+  };
 
   const handleDeleteProduct = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -55,8 +63,19 @@ export function ProductGrid({ isAuthenticated = false }: ProductGridProps) {
     try {
       let query = supabase
         .from('products')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact' });
+
+      if (sortBy === 'stock-desc') {
+        query = query.order('stock', { ascending: false });
+      } else if (sortBy === 'stock-asc') {
+        query = query.order('stock', { ascending: true });
+      } else if (sortBy === 'name-asc') {
+        query = query.order('name', { ascending: true });
+      } else if (sortBy === 'name-desc') {
+        query = query.order('name', { ascending: false });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
 
       if (searchQuery) {
         query = query.or(`name.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%`);
@@ -79,7 +98,7 @@ export function ProductGrid({ isAuthenticated = false }: ProductGridProps) {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, currentPage]);
+  }, [searchQuery, currentPage, sortBy]);
 
   useEffect(() => {
     fetchProducts();
@@ -106,13 +125,32 @@ export function ProductGrid({ isAuthenticated = false }: ProductGridProps) {
         )}
 
         {isAuthenticated && (
-          <button
-            onClick={() => { setProductToEdit(null); setIsAddModalOpen(true); }}
-            className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shrink-0"
-          >
-            <Plus className="-ml-1 mr-2 h-5 w-5" />
-            Agregar Producto
-          </button>
+          <div className="flex items-center gap-4 shrink-0">
+            {userRole === 'admin' && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500 font-medium hidden sm:inline">Ordenar:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none shadow-sm cursor-pointer"
+                >
+                  <option value="created_at-desc">Más recientes</option>
+                  <option value="stock-desc">Stock (Mayor a menor)</option>
+                  <option value="stock-asc">Stock (Menor a mayor)</option>
+                  <option value="name-asc">Nombre (A-Z)</option>
+                  <option value="name-desc">Nombre (Z-A)</option>
+                </select>
+              </div>
+            )}
+            
+            <button
+              onClick={() => { setProductToEdit(null); setIsAddModalOpen(true); }}
+              className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+            >
+              <Plus className="-ml-1 mr-2 h-5 w-5" />
+              Agregar <span className="hidden sm:inline">&nbsp;Producto</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -164,13 +202,13 @@ export function ProductGrid({ isAuthenticated = false }: ProductGridProps) {
                   <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between">
                     <button
                       onClick={(e) => { e.stopPropagation(); setProductToEdit(product); setIsAddModalOpen(true); }}
-                      className="text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors"
+                      className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors"
                     >
                       Editar
                     </button>
                     <button
                       onClick={(e) => handleDeleteProduct(product.id, e)}
-                      className="text-sm font-medium text-gray-500 hover:text-red-600 transition-colors"
+                      className="text-sm font-bold text-red-600 hover:text-red-800 transition-colors"
                     >
                       Eliminar
                     </button>
