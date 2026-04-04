@@ -7,12 +7,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 interface Product {
   id: string;
   name: string;
+  brand?: string;
   category?: string;
   sku?: string;
   slug?: string;
   description: string;
   stock: number;
   image_url: string;
+  images?: string[];
 }
 
 interface ProductGridProps {
@@ -170,20 +172,30 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
               onClick={() => navigate(`/producto/${product.slug || product.id}`)}
               className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all hover:-translate-y-1 flex flex-col cursor-pointer ring-1 ring-transparent hover:ring-blue-100"
             >
-              <div className="h-48 overflow-hidden bg-gray-100 relative">
+              <div className="h-48 overflow-hidden bg-gray-50/80 relative flex items-center justify-center p-4 group-hover:bg-gray-100 transition-colors">
                 {product.image_url ? (
                   <img
                     src={product.image_url}
                     alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-sm"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-sm">Sin Imagen</div>
+                  <div className="flex flex-col items-center gap-2 text-gray-300">
+                    <div className="bg-white p-3 rounded-full shadow-sm">
+                      <Plus className="h-6 w-6 rotate-45" />
+                    </div>
+                    <span className="text-xs font-bold uppercase tracking-widest">Sin Imagen</span>
+                  </div>
                 )}
               </div>
               <div className="p-5 flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-lg text-gray-900 line-clamp-1" title={product.name}>{product.name}</h3>
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-900 line-clamp-1" title={product.name}>{product.name}</h3>
+                    {product.brand && (
+                      <p className="text-xs font-semibold text-blue-600 uppercase tracking-tighter">{product.brand}</p>
+                    )}
+                  </div>
                   <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${product.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} shrink-0 ml-2 shadow-sm`}>
                     Stock: {product.stock}
                   </span>

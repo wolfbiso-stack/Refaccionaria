@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, Box, Tag, Info, AlertTriangle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Box, Tag, Info, AlertTriangle, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductFormModal } from './ProductFormModal';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -12,12 +12,14 @@ interface ProductDetailProps {
 interface Product {
   id: string;
   name: string;
+  brand?: string;
   description: string;
   category?: string;
   sku?: string;
   slug?: string;
   stock: number;
   image_url: string;
+  images?: string[];
   created_at: string;
   user_id?: string;
   updated_by?: string;
@@ -33,6 +35,7 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
   const [error, setError] = useState<string | null>(null);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
 
   const fetchProductDetails = async () => {
     try {
@@ -76,6 +79,7 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
 
   useEffect(() => {
     fetchProductDetails();
+    setActiveImageIdx(0); // Reset index when product changes
   }, [slugOrId, userRole]);
 
   const handleDelete = async () => {
@@ -134,24 +138,97 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
 
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-2">
+          
+          {/* Galería de Imágenes (Lado Izquierdo) */}
+          <div className="bg-gray-50/50 p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col lg:flex-row gap-6 min-h-[400px] lg:min-h-[550px]">
+            {(() => {
+              const displayImages = (product.images && product.images.length > 0) 
+                ? product.images 
+                : (product.image_url ? [product.image_url] : []);
+              
+              if (displayImages.length === 0) {
+                return (
+                  <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
+                    <Box className="h-24 w-24 mb-4 opacity-50" />
+                    <p className="font-medium">Sin imagen disponible</p>
+                  </div>
+                );
+              }
 
-          {/* Columna Izquierda: Imagen */}
-          <div className="bg-gray-50/50 p-6 lg:p-12 border-b lg:border-b-0 lg:border-r border-gray-100 flex items-center justify-center min-h-[300px] lg:min-h-[500px]">
-            {product.image_url ? (
-              <img
-                src={product.image_url}
-                alt={product.name}
-                className="max-w-full max-h-[400px] object-contain drop-shadow-md rounded-lg transition-transform hover:scale-105 duration-500"
-              />
-            ) : (
-              <div className="flex flex-col items-center text-gray-400">
-                <Box className="h-24 w-24 mb-4 opacity-50" />
-                <p className="font-medium">Sin imagen disponible</p>
-              </div>
-            )}
+              const nextImage = () => setActiveImageIdx((prev) => (prev + 1) % displayImages.length);
+              const prevImage = () => setActiveImageIdx((prev) => (prev - 1 + displayImages.length) % displayImages.length);
+
+              return (
+                <>
+                  {/* Tira de Miniaturas VERTICAL (Visible en LG) */}
+                  {displayImages.length > 1 && (
+                    <div className="hidden lg:flex flex-col gap-3 overflow-y-auto scrollbar-hide max-h-[450px] pr-2 shrink-0">
+                      {displayImages.map((img, idx) => (
+                        <button
+                          key={`${img}-${idx}`}
+                          onClick={() => setActiveImageIdx(idx)}
+                          className={`relative w-16 h-16 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0
+                            ${activeImageIdx === idx ? 'border-blue-600 shadow-md ring-2 ring-blue-100' : 'border-white hover:border-blue-200'}
+                          `}
+                        >
+                          <img src={img} alt="" className="w-full h-full object-cover" />
+                          {activeImageIdx !== idx && <div className="absolute inset-0 bg-white/20 hover:bg-transparent transition-colors"></div>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Imagen Principal */}
+                  <div className="flex-1 flex flex-col relative">
+                    <div className="flex-1 flex items-center justify-center relative group p-4">
+                      <img
+                        key={displayImages[activeImageIdx]}
+                        src={displayImages[activeImageIdx]}
+                        alt={product.name}
+                        className="max-w-full max-h-[400px] object-contain drop-shadow-2xl rounded-2xl transition-all duration-500 animate-in fade-in zoom-in-95"
+                      />
+                      
+                      {displayImages.length > 1 && (
+                        <>
+                          <button 
+                            onClick={prevImage}
+                            className="absolute left-0 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md text-gray-800 hover:bg-white transition-all opacity-0 group-hover:opacity-100"
+                          >
+                            <ChevronLeft className="h-5 w-5" />
+                          </button>
+                          <button 
+                            onClick={nextImage}
+                            className="absolute right-0 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md text-gray-800 hover:bg-white transition-all opacity-0 group-hover:opacity-100"
+                          >
+                            <ChevronRight className="h-5 w-5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Miniaturas Horizontales (Solo Móvil) */}
+                    {displayImages.length > 1 && (
+                      <div className="flex lg:hidden gap-3 justify-center overflow-x-auto mt-4 pb-2 scrollbar-hide">
+                        {displayImages.map((img, idx) => (
+                          <button
+                            key={`${img}-${idx}-mob`}
+                            onClick={() => setActiveImageIdx(idx)}
+                            className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 transition-all shrink-0
+                              ${activeImageIdx === idx ? 'border-blue-600' : 'border-white'}
+                            `}
+                          >
+                            <img src={img} alt="" className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
-          {/* Columna Derecha: Detalles */}
+          {/* Columna Derecha: Detalles (Vuelve al Split) */}
           <div className="p-6 lg:p-10 flex flex-col">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-4">
@@ -161,10 +238,15 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
                     {product.category}
                   </span>
                 )}
-                <span className="text-xs text-gray-400 font-mono">SKU: {sku}</span>
+                {product.brand && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 tracking-wide uppercase">
+                    {product.brand}
+                  </span>
+                )}
+                <span className="text-xs text-gray-400 font-mono italic">SKU: {sku}</span>
               </div>
 
-              <h1 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tight mb-4">
+              <h1 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tight mb-6">
                 {product.name}
               </h1>
 
@@ -240,7 +322,6 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
                 </div>
               </div>
             )}
-
           </div>
         </div>
       </div>

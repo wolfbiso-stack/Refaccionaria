@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Save, PackagePlus, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { ProductImageManager } from './ProductImageManager';
 
 interface Product {
   id?: string;
   name: string;
+  brand?: string;
   category?: string;
   sku?: string;
   slug?: string;
   description: string;
   stock: number;
   image_url?: string;
+  images?: string[];
 }
 
 interface ProductFormModalProps {
@@ -26,30 +29,32 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
 
   const [formData, setFormData] = useState({
     name: '',
+    brand: '',
     category: '',
     sku: '',
     description: '',
     stock: 0,
+    images: [] as string[],
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       if (initialProduct) {
+        // Migration: If we have image_url but no images array, put it in the array
+        const initialImages = initialProduct.images || (initialProduct.image_url ? [initialProduct.image_url] : []);
+        
         setFormData({
           name: initialProduct.name,
+          brand: initialProduct.brand || '',
           category: initialProduct.category || '',
           sku: initialProduct.sku || '',
           description: initialProduct.description || '',
           stock: initialProduct.stock,
+          images: initialImages,
         });
-        setImagePreview(initialProduct.image_url || null);
       } else {
-        setFormData({ name: '', category: '', sku: '', description: '', stock: 0 });
-        setImagePreview(null);
+        setFormData({ name: '', brand: '', category: '', sku: '', description: '', stock: 0, images: [] });
       }
-      setImageFile(null);
       setError(null);
     }
   }, [isOpen, initialProduct]);
@@ -57,26 +62,11 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
   if (!isOpen) return null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+      const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: name === 'stock' ? (value === '' ? '' : Number(value)) : value
     }));
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setImageFile(null);
-      setImagePreview(null);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,28 +87,6 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
     }
 
     try {
-      let finalImageUrl = null;
-
-      if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}-${Date.now()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('productos')
-          .upload(filePath, imageFile, {
-            upsert: false
-          });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('productos')
-          .getPublicUrl(filePath);
-
-        finalImageUrl = publicUrl;
-      }
-
       const { data: { user } } = await supabase.auth.getUser();
 
       const generateSlug = (name: string, sku: string) => {
@@ -130,12 +98,15 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
 
       const productPayload = {
         name: formData.name,
+        brand: formData.brand || null,
         category: formData.category || null,
         sku: formData.sku,
         slug: slug,
         description: formData.description || null,
         stock: Number(formData.stock) || 0,
-        ...(finalImageUrl !== null && { image_url: finalImageUrl }),
+        images: formData.images,
+        // Mantener image_url para compatibilidad con vistas viejas (usamos la primera imagen)
+        image_url: formData.images.length > 0 ? formData.images[0] : null,
       };
 
       if (initialProduct && initialProduct.id) {
@@ -154,9 +125,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
       }
 
       // Success
-      setFormData({ name: '', category: '', sku: '', description: '', stock: 0 });
-      setImageFile(null);
-      setImagePreview(null);
+      setFormData({ name: '', brand: '', category: '', sku: '', description: '', stock: 0, images: [] });
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -176,8 +145,9 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
       ></div>
 
       {/* Modal */}
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative z-10 animate-in fade-in zoom-in duration-200">
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden relative z-10 animate-in fade-in zoom-in duration-200 flex flex-col">
+        {/* Header - Fixed */}
+        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
           <div className="flex items-center gap-2 text-gray-800">
             <PackagePlus className="h-5 w-5 text-blue-600" />
             <h3 className="text-lg font-bold">
@@ -192,126 +162,135 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
-          {error && (
-            <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-lg flex items-start gap-2 text-sm">
-              <AlertCircle className="h-5 w-5 shrink-0" />
-              <p>{error}</p>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre del Producto <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
-                placeholder="Ej: Balatas Delanteras Vento"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1">
-                SKU / Número de Parte <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="sku"
-                name="sku"
-                value={formData.sku}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
-                placeholder="Ej: BVS-9921"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                  Categoría
-                </label>
-                <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm bg-white"
-                >
-                  <option value="">Ninguna</option>
-                  <option value="Frenos">Frenos</option>
-                  <option value="Suspensión">Suspensión</option>
-                  <option value="Motor">Motor</option>
-                  <option value="Eléctrico">Eléctrico</option>
-                  <option value="Filtros">Filtros</option>
-                  <option value="Accesorios">Accesorios</option>
-                </select>
+        <form onSubmit={handleSubmit} className="flex flex-col overflow-hidden flex-1">
+          {/* Scrollable Content Area */}
+          <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+            {error && (
+              <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-lg flex items-start gap-2 text-sm">
+                <AlertCircle className="h-5 w-5 shrink-0" />
+                <p>{error}</p>
               </div>
+            )}
 
+            <div className="space-y-4">
               <div>
-                <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">
-                  Stock Inicial <span className="text-red-500">*</span>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre del Producto <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="number"
-                  id="stock"
-                  name="stock"
-                  min="0"
-                  value={formData.stock}
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                  placeholder="Ej: Balatas Delanteras Vento"
                   required
                 />
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm resize-none"
-                placeholder="Detalles adicionales o compatibilidad..."
-              ></textarea>
-            </div>
+              <div>
+                <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
+                  Marca <span className="text-gray-400 font-normal">(Opcional para búsqueda)</span>
+                </label>
+                <input
+                  type="text"
+                  id="brand"
+                  name="brand"
+                  value={formData.brand}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                  placeholder="Ej: Bosch, Fritec, OEM..."
+                />
+              </div>
 
-            <div>
-              <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
-                Imagen del Producto <span className="text-gray-400 font-normal">(Opcional)</span>
-              </label>
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
+              <div>
+                <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1">
+                  SKU / Número de Parte <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="sku"
+                  name="sku"
+                  value={formData.sku}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                  placeholder="Ej: BVS-9921"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                    Categoría
+                  </label>
+                  <select
+                    id="category"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm bg-white"
+                  >
+                    <option value="">Ninguna</option>
+                    <option value="Frenos">Frenos</option>
+                    <option value="Suspensión">Suspensión</option>
+                    <option value="Motor">Motor</option>
+                    <option value="Eléctrico">Eléctrico</option>
+                    <option value="Filtros">Filtros</option>
+                    <option value="Accesorios">Accesorios</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">
+                    Stock Inicial <span className="text-red-500">*</span>
+                  </label>
                   <input
-                    type="file"
-                    id="image"
-                    name="image"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    type="number"
+                    id="stock"
+                    name="stock"
+                    min="0"
+                    value={formData.stock}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                    required
                   />
                 </div>
-                {imagePreview && (
-                  <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-gray-200">
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                  </div>
-                )}
               </div>
-            </div>
-          </div>
 
-          <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end gap-3">
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                  Descripción
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm resize-none"
+                  placeholder="Detalles adicionales o compatibilidad..."
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Imagen del Producto
+                </label>
+                <ProductImageManager 
+                  sku={formData.sku}
+                  name={formData.name}
+                  brand={formData.brand}
+                  currentImages={formData.images}
+                  onImagesChanged={(urls) => setFormData(prev => ({ ...prev, images: urls }))}
+                />
+              </div>
+            </div> {/* End of space-y-4 */}
+          </div> {/* End of scrollable content */}
+
+          {/* Footer - Fixed at bottom */}
+          <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/30 flex justify-end gap-3 shrink-0">
             <button
               type="button"
               onClick={onClose}
