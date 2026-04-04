@@ -99,28 +99,49 @@ export function SystemSettings() {
             const workbook = XLSX.read(buffer, { type: 'array' });
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
-            const jsonRows: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+            
+            // Convert to array of arrays to find header row dynamically
+            const rawAoA = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+            
+            // Find header row: looking for a row that has columns similar to SKU/Clave and Stock/Exis
+            const headerRowIndex = (rawAoA as any[][]).findIndex((row) => {
+                const rowStr = row.map(cell => String(cell).toUpperCase()).join(' ');
+                const hasSkuCol = rowStr.includes('SKU') || rowStr.includes('CODIGO') || rowStr.includes('CLAVE');
+                const hasStockCol = rowStr.includes('CANTIDAD') || rowStr.includes('STOCK') || rowStr.includes('EXIS');
+                return hasSkuCol && hasStockCol;
+            });
+
+            // Parse json starting from the detected header row or beginning if not found
+            const jsonRows: any[] = XLSX.utils.sheet_to_json(worksheet, { 
+                range: headerRowIndex >= 0 ? headerRowIndex : 0, 
+                defval: "" 
+            });
 
             if (jsonRows.length === 0) throw new Error("El archivo Excel parece estar vacío.");
 
             // 4. Detect column names intelligently
             const firstRowKeys = Object.keys(jsonRows[0] || {});
-            const skuKey = firstRowKeys.find(key => key.toUpperCase().includes('SKU') || key.toUpperCase() === 'CODIGO') || 'SKU';
+            const skuKey = firstRowKeys.find(key => {
+                const upperKey = key.toUpperCase();
+                return upperKey.includes('SKU') || upperKey === 'CODIGO' || upperKey.includes('CLAVE');
+            }) || 'SKU';
 
-            if (!firstRowKeys.includes(skuKey) && !firstRowKeys.some(k => k.toUpperCase().includes('SKU'))) {
-                throw new Error("No se pudo detectar una columna llamada 'SKU' o 'Codigo' en tu archivo Excel.");
+            if (!firstRowKeys.includes(skuKey) && !firstRowKeys.some(k => k.toUpperCase().includes('SKU') || k.toUpperCase() === 'CODIGO' || k.toUpperCase().includes('CLAVE'))) {
+                throw new Error("No se pudo detectar una columna de identificador (ej: 'SKU', 'Codigo', 'Clave') en tu archivo Excel.");
             }
 
-            // 5. Map Excel rows
-            const excelData: ExcelRow[] = jsonRows.map(row => {
+            // 5. Map Excel rows and aggregate by SKU
+            const excelSkuMap = new Map<string, ExcelRow>();
+            
+            jsonRows.forEach(row => {
                 let rawSku = '';
                 let rawStock = 0;
 
                 for (const [key, val] of Object.entries(row)) {
                     const upperKey = key.toUpperCase();
-                    if (upperKey.includes('SKU') || upperKey === 'CODIGO') {
+                    if (upperKey.includes('SKU') || upperKey === 'CODIGO' || upperKey.includes('CLAVE')) {
                         rawSku = String(val).trim();
-                    } else if (upperKey.includes('CANTIDAD') || upperKey.includes('STOCK')) {
+                    } else if (upperKey.includes('CANTIDAD') || upperKey.includes('STOCK') || upperKey.includes('EXIS')) {
                         if (typeof val === 'number') {
                             rawStock = val;
                         } else {
@@ -129,21 +150,27 @@ export function SystemSettings() {
                     }
                 }
 
-                return {
-                    sku: rawSku,
-                    stock: rawStock,
-                    originalRow: row
-                };
-            }).filter(r => r.sku !== "");
+                if (rawSku !== "") {
+                    const skuUpper = rawSku.toUpperCase();
+                    if (excelSkuMap.has(skuUpper)) {
+                        excelSkuMap.get(skuUpper)!.stock += rawStock;
+                    } else {
+                        excelSkuMap.set(skuUpper, {
+                            sku: rawSku,
+                            stock: rawStock,
+                            originalRow: row
+                        });
+                    }
+                }
+            });
+
+            const excelData: ExcelRow[] = Array.from(excelSkuMap.values());
 
             // 6. Compare and categorize
             const toUpdate: UpdateItem[] = [];
             const toInsert: InsertItem[] = [];
             const ignoredNoChange: DbProduct[] = [];
             const ignoredNotInExcel: DbProduct[] = [];
-
-            const excelSkuMap = new Map<string, ExcelRow>();
-            excelData.forEach(row => excelSkuMap.set(row.sku.toUpperCase(), row));
 
             dbProducts.forEach(dbProd => {
                 const dbSkuUpper = dbProd.sku.toUpperCase();
@@ -314,7 +341,7 @@ export function SystemSettings() {
                                 </div>
                                 <h3 className="text-lg font-bold text-gray-900 mb-1">Cargar Archivo Excel</h3>
                                 <p className="text-gray-500 text-sm max-w-sm mb-6">
-                                    Sube un archivo .xlsx o .csv que contenga las columnas "SKU" y "Cantidad" o equivalente. Si el SKU es nuevo, tomaremos los datos complementarios para registrarlo automáticamente.
+                                    Sube un archivo .xlsx o .csv que contenga las columnas "SKU" y "Cantidad" (o "Clave" y "Exis"). Si el identificador es nuevo, tomaremos los datos complementarios para registrarlo.
                                 </p>
                                 <span className="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 shadow-sm transition-colors">
                                     Explorar Archivos
