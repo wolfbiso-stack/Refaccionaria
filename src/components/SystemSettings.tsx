@@ -85,14 +85,34 @@ export function SystemSettings() {
             const { data: { session } } = await supabase.auth.getSession();
             const currentUserId = session?.user?.id;
 
-            // 2. Fetch DB Products
-            const { data: rawDbProducts, error: dbError } = await supabase
-                .from('products')
-                .select('id, name, sku, stock');
+            // 2. Fetch ALL DB Products (handling 1000 row limit)
+            let rawDbProducts: any[] = [];
+            let hasMore = true;
+            let start = 0;
+            const limit = 1000;
+            
+            while (hasMore) {
+                const { data, error: dbError } = await supabase
+                    .from('products')
+                    .select('id, name, sku, stock, slug')
+                    .range(start, start + limit - 1);
+                    
+                if (dbError) throw dbError;
+                
+                if (data && data.length > 0) {
+                    rawDbProducts = [...rawDbProducts, ...data];
+                    if (data.length < limit) {
+                        hasMore = false;
+                    } else {
+                        start += limit;
+                    }
+                } else {
+                    hasMore = false;
+                }
+            }
 
-            if (dbError) throw dbError;
-
-            const dbProducts = (rawDbProducts || []).filter(p => !!p.sku) as DbProduct[];
+            const dbProducts = rawDbProducts.filter(p => !!p.sku) as (DbProduct & { slug?: string })[];
+            const dbSlugSet = new Set(rawDbProducts.map(p => p.slug).filter(Boolean));
 
             // 3. Read Excel
             const buffer = await file.arrayBuffer();
@@ -211,6 +231,14 @@ export function SystemSettings() {
                 }
 
                 if (!nameVal) nameVal = `Producto ${ex.sku}`;
+                
+                let slugVal = generateSlug(nameVal, ex.sku);
+                let attempt = 1;
+                while (dbSlugSet.has(slugVal)) {
+                    slugVal = `${generateSlug(nameVal, ex.sku)}-${attempt}`;
+                    attempt++;
+                }
+                dbSlugSet.add(slugVal);
 
                 toInsert.push({
                     id: `new-${idx}`,
@@ -218,7 +246,7 @@ export function SystemSettings() {
                     sku: ex.sku,
                     stock: ex.stock,
                     category: catVal,
-                    slug: generateSlug(nameVal, ex.sku),
+                    slug: slugVal,
                     user_id: currentUserId
                 });
             });
