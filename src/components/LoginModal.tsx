@@ -37,34 +37,42 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
 
         try {
             if (isSignUp) {
-                // Registrar nuevo usuario
+                // Registrar nuevo usuario en Supabase Auth
                 const { data, error: signUpError } = await supabase.auth.signUp({
                     email,
                     password,
+                    options: {
+                        data: {
+                            role: 'usuario'
+                        }
+                    }
                 });
 
                 if (signUpError) throw signUpError;
 
                 if (data.user) {
-                    // Crear perfil en la tabla user_profiles con rol de usuario
-                    const { error: profileError } = await supabase
-                        .from('user_profiles')
-                        .insert([
-                            {
-                                id: data.user.id,
-                                email: email,
-                                role: 'usuario'
-                            }
-                        ]);
+                    // Intentamos crear/actualizar el perfil, pero no bloqueamos si falla 
+                    // (el disparador de base de datos debería encargarse)
+                    try {
+                        const { error: profileError } = await supabase
+                            .from('user_profiles')
+                            .upsert([
+                                {
+                                    id: data.user.id,
+                                    email: email,
+                                    role: 'usuario'
+                                }
+                            ], { onConflict: 'id' });
 
-                    if (profileError) {
-                        console.error('Error al crear perfil:', profileError);
-                        // No lanzamos error aquí porque el usuario ya se creó en Auth
+                        if (profileError) {
+                            console.warn('Nota: El perfil no se pudo actualizar manualmente, se confiará en el trigger de la BD:', profileError.message);
+                        }
+                    } catch (e) {
+                        console.warn('Error silencioso en upsert de perfil:', e);
                     }
                 }
                 
-                // Si llegamos aquí, el registro fue exitoso
-                // Dependiendo de la config de Supabase, puede requerir confirmación de email
+                // Si llegamos aquí, el registro de Auth fue exitoso
                 setError('¡Cuenta creada! Revisa tu correo o intenta iniciar sesión.');
                 setIsSignUp(false);
             } else {
@@ -80,13 +88,14 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
                 onClose();
             }
         } catch (err: any) {
-            console.error('Error en autenticación:', err);
+            console.error('Error detallado en autenticación:', err);
             if (err.message?.includes('already registered')) {
                 setError('Este correo ya está registrado.');
             } else if (err.message?.includes('at least 6 characters')) {
                 setError('La contraseña debe tener al menos 6 caracteres.');
             } else {
-                setError('Credenciales inválidas o error de conexión.');
+                // Mostrar el mensaje real de error para diagnóstico
+                setError(err.message || 'Error de conexión o credenciales inválidas.');
             }
         } finally {
             setLoading(false);
@@ -132,7 +141,7 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
                                 id="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all shadow-sm"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#fdc401] focus:border-[#fdc401] outline-none transition-all shadow-sm"
                                 placeholder="usuario@ejemplo.com"
                                 required
                             />
@@ -147,7 +156,7 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
                                 id="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all shadow-sm"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#fdc401] focus:border-[#fdc401] outline-none transition-all shadow-sm"
                                 placeholder="••••••••"
                                 required
                             />
@@ -163,7 +172,7 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
                                     id="confirmPassword"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all shadow-sm"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#fdc401] focus:border-[#fdc401] outline-none transition-all shadow-sm"
                                     placeholder="••••••••"
                                     required
                                 />
@@ -175,7 +184,7 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-black text-amber-950 bg-amber-500 border border-transparent rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
+                            className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-black text-black bg-[#fdc401] border border-transparent rounded-lg hover:bg-[#cc9e01] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#fdc401] transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
                         >
                             {loading ? (
                                 <>{isSignUp ? 'Creando cuenta...' : 'Iniciando sesión...'}</>

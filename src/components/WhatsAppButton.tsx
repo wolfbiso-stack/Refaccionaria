@@ -1,4 +1,3 @@
-import { MessageCircle } from 'lucide-react';
 
 export function WhatsAppButton() {
   const whatsappNumber = "529246886220";
@@ -17,7 +16,7 @@ export function WhatsAppButton() {
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
         <span className="relative inline-flex rounded-full h-5 w-5 bg-green-500 border-2 border-white"></span>
       </div>
-      <MessageCircle className="w-8 h-8 fill-white" />
+      <img src="/whatsapp.png" alt="WhatsApp" className="w-10 h-10 object-contain drop-shadow-md" />
       
       {/* Tooltip */}
       <span className="absolute left-20 bg-gray-900 text-white text-[10px] font-black px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap uppercase tracking-widest pointer-events-none shadow-xl">

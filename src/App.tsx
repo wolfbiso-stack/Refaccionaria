@@ -17,6 +17,7 @@ import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
 import { CartProvider } from './context/CartContext';
 import { CotizadorView } from './components/CotizadorView';
+import { HelpContactView } from './components/HelpContactView';
 import { CartToast } from './components/CartToast';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { ClipboardList } from 'lucide-react';
@@ -25,24 +26,26 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<'admin' | 'empleado' | 'usuario' | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const checkRole = async (userId: string) => {
+  const fetchUserInfo = async (userId: string) => {
     try {
-      const { data, error } = await supabase.from('user_profiles').select('role').eq('id', userId).single();
+      const { data, error } = await supabase.from('user_profiles').select('*').eq('id', userId).single();
       if (!error && data) {
         setUserRole(data.role as 'admin' | 'empleado' | 'usuario');
+        setUserProfile(data);
       }
     } catch (err) {
-      console.error('Error fetching role:', err);
+      console.error('Error fetching user info:', err);
     }
   };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) checkRole(session.user.id);
+      if (session?.user) fetchUserInfo(session.user.id);
     });
 
     const {
@@ -50,9 +53,10 @@ function App() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session?.user) {
-        checkRole(session.user.id);
+        fetchUserInfo(session.user.id);
       } else {
         setUserRole(null);
+        setUserProfile(null);
       }
     });
 
@@ -72,6 +76,8 @@ function App() {
           onOpenSidebar={() => setIsSidebarOpen(true)}
           isAuthenticated={isAuthenticated}
           userRole={userRole}
+          userProfile={userProfile}
+          email={session?.user?.email}
           onLoginClick={() => setIsLoginModalOpen(true)}
           onLogoutClick={handleLogout}
           onOpenCart={() => setIsCartOpen(true)}
@@ -87,6 +93,24 @@ function App() {
                   isAuthenticated={isAuthenticated}
                   userRole={userRole}
                 />
+                
+                {/* Sección de Proveedores */}
+                <section className="mt-20 mb-12 border-t border-gray-100 pt-16">
+                  <div className="text-center mb-12">
+                    <h2 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tighter uppercase mb-4">Nuestros Proveedores</h2>
+                    <div className="w-24 h-1.5 bg-[#fdc401] mx-auto rounded-full"></div>
+                  </div>
+                  <div className="relative group max-w-5xl mx-auto">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-amber-100 to-amber-50 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                    <div className="relative bg-white p-4 rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+                      <img 
+                        src="/proveedores.png" 
+                        alt="Nuestros Proveedores" 
+                        className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-[1.02]"
+                      />
+                    </div>
+                  </div>
+                </section>
               </>
             } />
             <Route path="/producto/:id" element={
@@ -100,7 +124,7 @@ function App() {
                 <div className="text-center py-20 px-4">
                   <h1 className="text-2xl font-bold text-red-600">Acceso Restringido</h1>
                   <p className="text-gray-500 mt-2">Debes iniciar sesión para ver tu perfil.</p>
-                  <button 
+                  <button
                     onClick={() => setIsLoginModalOpen(true)}
                     className="mt-4 px-6 py-2 bg-amber-500 text-amber-950 rounded-lg font-bold hover:bg-amber-600 transition-colors"
                   >
@@ -110,10 +134,10 @@ function App() {
               )
             } />
             <Route path="/dashboard" element={
-              userRole === 'admin' ? <Dashboard /> : (
+              userRole === 'admin' || userRole === 'empleado' ? <Dashboard /> : (
                 <div className="text-center py-20 px-4">
                   <h1 className="text-2xl font-bold text-red-600">Acceso Denegado</h1>
-                  <p className="text-gray-500 mt-2">No tienes permisos de Administrador para ver esta página.</p>
+                  <p className="text-gray-500 mt-2">No tienes permisos para ver el Dashboard Administrativo.</p>
                 </div>
               )
             } />
@@ -121,7 +145,7 @@ function App() {
               userRole === 'admin' ? <EmployeeManagement /> : (
                 <div className="text-center py-20 px-4">
                   <h1 className="text-2xl font-bold text-red-600">Acceso Denegado</h1>
-                  <p className="text-gray-500 mt-2">No tienes permisos de Administrador para ver esta página.</p>
+                  <p className="text-gray-500 mt-2">Solo un Administrador puede gestionar el personal y usuarios.</p>
                 </div>
               )
             } />
@@ -129,25 +153,26 @@ function App() {
               userRole === 'admin' ? <SystemSettings /> : (
                 <div className="text-center py-20 px-4">
                   <h1 className="text-2xl font-bold text-red-600">Acceso Denegado</h1>
-                  <p className="text-gray-500 mt-2">No tienes permisos de Administrador para ver esta página.</p>
+                  <p className="text-gray-500 mt-2">Acceso restringido a la configuración global del sistema.</p>
                 </div>
               )
             } />
             <Route path="/sucursales" element={<SucursalesView />} />
+            <Route path="/ayuda-contacto" element={<HelpContactView />} />
             <Route path="/cotizador" element={
               isAuthenticated ? <CotizadorView /> : (
                 <div className="max-w-3xl mx-auto py-20 px-6 text-center bg-white rounded-[2.5rem] shadow-sm border border-gray-100 animate-in fade-in zoom-in duration-500">
-                  <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-8 border-4 border-white shadow-xl shadow-amber-500/10">
-                    <ClipboardList className="w-10 h-10 text-amber-500" />
+                  <div className="w-20 h-20 bg-[#fdc401]/10 rounded-full flex items-center justify-center mx-auto mb-8 border-4 border-white shadow-xl shadow-[#fdc401]/10">
+                    <ClipboardList className="w-10 h-10 text-[#fdc401]" />
                   </div>
                   <h1 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">¡Ya casi tienes tu cotización lista!</h1>
                   <p className="text-gray-500 mb-10 max-w-md mx-auto font-bold leading-relaxed opacity-80">
-                    Para generar el documento formal en PDF y guardar tus datos fiscales para futuras compras, necesitamos que inicies sesión o crees una cuenta gratuita.
+                    Para generar el documento formal en PDF y guardar tus datos para futuras compras, necesitamos que inicies sesión o crees una cuenta gratuita.
                   </p>
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <button 
+                    <button
                       onClick={() => setIsLoginModalOpen(true)}
-                      className="w-full sm:w-auto px-10 py-5 bg-amber-500 text-amber-950 rounded-2xl font-black shadow-xl shadow-amber-200 hover:bg-amber-600 transition-all active:scale-95 flex items-center justify-center gap-3"
+                      className="w-full sm:w-auto px-10 py-5 bg-[#fdc401] text-black rounded-2xl font-black shadow-xl shadow-[#fdc401]/20 hover:bg-[#cc9e01] transition-all active:scale-95 flex items-center justify-center gap-3"
                     >
                       Iniciar Sesión / Registrarse
                     </button>

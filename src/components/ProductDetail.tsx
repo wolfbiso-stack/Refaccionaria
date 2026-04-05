@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useCart } from '../context/CartContext';
-import { ArrowLeft, Box, Tag, Info, AlertTriangle, Trash2, ChevronLeft, ChevronRight, ShoppingCart, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Box, AlertTriangle, Trash2, ChevronLeft, ChevronRight, ShieldAlert, Minus, Plus } from 'lucide-react';
 import { ProductFormModal } from './ProductFormModal';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -38,6 +38,7 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
+  const [quantity, setQuantity] = useState(1);
 
   const canManageProducts = userRole === 'admin' || userRole === 'empleado';
 
@@ -227,82 +228,131 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
           </div>
 
           {/* Detalles del Producto */}
-          <div className="p-6 lg:p-10 flex flex-col justify-between">
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-6">
-                {product.category && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black bg-gray-100 text-gray-600 tracking-wider uppercase">
-                    <Tag className="h-3 w-3 mr-1.5" />
-                    {product.category}
-                  </span>
-                )}
-                {product.brand && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black bg-amber-50 text-amber-700 tracking-wider uppercase border border-amber-100/50">
-                    {product.brand}
-                  </span>
-                )}
-                <span className="text-[9px] text-gray-400 font-mono font-bold tracking-widest ml-auto">SKU: {sku}</span>
-              </div>
-
-              <h1 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tight mb-8">
-                {product.name}
+          <div className="p-6 lg:p-8 flex flex-col">
+            <div className="flex-1">
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 tracking-tight mb-1.5">
+                {product.name} {product.brand ? `- ${product.brand}` : ''}
               </h1>
 
-              <div className="space-y-4 mb-10">
-                <h3 className="text-[10px] font-black text-amber-500 uppercase tracking-widest flex items-center">
-                  <Info className="h-4 w-4 mr-2" />
-                  Descripción
-                </h3>
-                <p className="text-gray-600 font-medium leading-relaxed whitespace-pre-line text-base opacity-90">
-                  {product.description || "Sin descripción disponible."}
+              <div className="flex items-center gap-6 mb-6 text-sm lg:text-base">
+                <p className="font-bold text-gray-700">
+                  Número de Parte: <span className="text-[#fdc401]">{sku}</span>
                 </p>
+                {product.category && (
+                  <p className="font-bold text-gray-700 border-l border-gray-200 pl-6">
+                    Categoría: <span className="text-[#fdc401]">{product.category}</span>
+                  </p>
+                )}
+              </div>
+
+              <div className="border-t border-gray-50 pt-5 mb-5">
+                <p className="text-gray-500 font-medium leading-relaxed text-[13px] opacity-90 max-w-lg">
+                  {product.description || `Te ofrecemos ${product.name} marca ${product.brand || ''}, consulta nuestro increíble precio y ¡Compra ahora!.`}
+                </p>
+              </div>
+
+              {/* Selector de Cantidad */}
+              <div className="mb-6">
+                <label className="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest">Cantidad</label>
+                <div className="flex items-center w-24 h-8 border border-gray-100 rounded-lg overflow-hidden bg-white shadow-sm">
+                  <button 
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="flex-1 h-full flex items-center justify-center text-gray-300 hover:bg-gray-50 transition-colors border-r border-gray-50"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </button>
+                  <div className="flex-[1.2] h-full flex items-center justify-center font-bold text-gray-600 text-xs">
+                    {quantity}
+                  </div>
+                  <button 
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="flex-1 h-full flex items-center justify-center text-[#fdc401] hover:bg-gray-50 transition-colors border-l border-gray-50"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Panel de Acción */}
             <div className="space-y-6">
-              <div className="bg-amber-50/30 rounded-2xl p-6 border border-amber-100 flex items-center justify-between shadow-inner">
-                <div>
-                  <p className="text-[9px] font-black text-amber-700/60 uppercase tracking-widest mb-2">Disponibilidad</p>
-                  <div className="flex items-center gap-3">
-                    <div className={`h-3 w-3 rounded-full ${product.stock > 0 ? 'bg-green-500 shadow-sm' : 'bg-red-500'}`}></div>
-                    <span className="text-2xl font-black text-gray-900 tracking-tight">
-                      {product.stock} <span className="text-sm font-bold text-gray-400 uppercase ml-1">unidades</span>
-                    </span>
+              <div className="flex flex-col gap-5">
+                <button 
+                  onClick={() => addToCart(product, quantity)}
+                  className="w-fit flex items-center justify-center gap-3 bg-[#fdc401] hover:bg-[#cc9e01] text-black px-10 py-3 rounded-xl font-black text-sm shadow-lg shadow-[#fdc401]/10 transition-all active:scale-95 group"
+                >
+                  Agregar al carrito
+                </button>
+                
+                <div className="flex items-center justify-between gap-8">
+                  <div className="flex items-center gap-4">
+                    <span className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Comparte</span>
+                    <div className="flex items-center gap-2">
+                       <a 
+                         href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="w-8 h-8 rounded-full bg-[#3b5998] flex items-center justify-center text-white hover:opacity-90 transition-opacity"
+                       >
+                         <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                           <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                         </svg>
+                       </a>
+                       <a 
+                         href={`fb-messenger://share?link=${encodeURIComponent(window.location.href)}&app_id=123456789`}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="w-8 h-8 rounded-full bg-[#0084FF] flex items-center justify-center text-white hover:opacity-90 transition-opacity"
+                       >
+                         <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                           <path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.654V24l4.088-2.242c1.092.304 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111C24 4.974 18.627 0 12 0zm1.291 14.88l-3.057-3.262-5.96 3.262 6.556-6.958 3.129 3.262 5.89-3.262-6.558 6.958z"/>
+                         </svg>
+                       </a>
+                       <a 
+                         href={`https://wa.me/?text=${encodeURIComponent(`Mira esta refacción en CORDOBESA: ${product.name} - ${window.location.href}`)}`}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-90 transition-opacity"
+                       >
+                         <img src="/whatsapp.png" alt="WhatsApp" className="w-full h-full object-contain" />
+                       </a>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-gray-800">¿Necesitas ayuda?</p>
+                    <a 
+                      href={`https://wa.me/529246886220?text=${encodeURIComponent(`Hola, necesito ayuda respecto al artículo "${product.name}"`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-black text-[#25d366] hover:underline uppercase tracking-widest"
+                    >
+                      Contactanos
+                    </a>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
-                <button 
-                  onClick={() => addToCart(product)}
-                  className="w-full flex items-center justify-center gap-3 bg-amber-500 hover:bg-amber-600 text-amber-950 px-6 py-4 rounded-xl font-black text-lg shadow-lg shadow-amber-100/50 transition-all active:scale-95 group"
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                  Añadir al Cotizador
-                </button>
-                <button 
-                  onClick={() => navigate('/cotizador')}
-                  className="w-full text-center py-2 text-[10px] font-black text-amber-700/60 hover:text-amber-700 transition-colors uppercase tracking-[0.2em]"
-                >
-                  Finalizar Cotización
-                </button>
+              {/* Disponibilidad (Más grande por solicitud) */}
+              <div className="pt-4 flex items-center gap-3 text-xs lg:text-sm font-black text-gray-800 uppercase tracking-widest border-t border-gray-100">
+                <div className={`h-2.5 w-2.5 rounded-full shadow-sm ${product.stock > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span>{product.stock} unidades disponibles</span>
               </div>
 
               {isAuthenticated && canManageProducts && (
-                <div className="pt-6 border-t border-gray-100">
+                <div className="pt-4 border-t border-gray-100">
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={() => setIsEditModalOpen(true)}
-                      className="flex items-center justify-center px-4 py-3 border border-amber-200 text-xs font-black rounded-xl text-amber-900 bg-white hover:bg-amber-50 transition-all"
+                      className="flex items-center justify-center px-4 py-2.5 border border-amber-200 text-[10px] font-black rounded-xl text-amber-900 bg-white hover:bg-amber-50 transition-all uppercase tracking-widest"
                     >
-                      Editar
+                      Editar Producto
                     </button>
                     <button
                       onClick={handleDelete}
-                      className="flex items-center justify-center px-4 py-3 border border-red-100 text-xs font-black rounded-xl text-red-600 bg-white hover:bg-red-50 transition-all"
+                      className="flex items-center justify-center px-4 py-2.5 border border-red-100 text-[10px] font-black rounded-xl text-red-600 bg-white hover:bg-red-50 transition-all uppercase tracking-widest"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <Trash2 className="h-3.5 w-3.5 mr-2" />
                       Eliminar
                     </button>
                   </div>

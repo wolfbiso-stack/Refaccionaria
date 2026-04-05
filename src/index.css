@@ -3,6 +3,20 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --amber-50: #fff9e6;
+    --amber-100: #ffefcc;
+    --amber-200: #ffe099;
+    --amber-300: #ffcd66;
+    --amber-400: #ffbd33;
+    --amber-500: #fdc401;
+    --amber-600: #cc9e01;
+    --amber-700: #997601;
+    --amber-800: #664f00;
+    --amber-900: #332700;
+    --amber-950: #1a1400;
+  }
+  
   body {
     @apply bg-gray-50 text-gray-900;
   }

@@ -3,14 +3,14 @@ import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 import { FileDown, Send, ArrowLeft, User, Phone as PhoneIcon, Mail, Building2, ClipboardList, Loader2, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { generateQuotationPDF } from '../lib/pdfGenerator';
 
 export function CotizadorView() {
-    const { cartItems } = useCart();
+    const { cartItems, clearCart } = useCart();
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState(false);
+    const [validationError, setValidationError] = useState<boolean>(false);
 
     useEffect(() => {
         fetchProfile();
@@ -39,106 +39,72 @@ export function CotizadorView() {
     };
 
     const generatePDF = async () => {
+        // Validar que exista nombre y teléfono
+        const hasName = profile?.is_corporate ? !!profile.corporate_name?.trim() : !!profile?.first_name?.trim();
+        const hasPhone = !!profile?.phone?.trim();
+
+        if (!hasName || !hasPhone) {
+            setValidationError(true);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
         try {
             setGenerating(true);
-            const doc = new jsPDF();
-            const date = new Date().toLocaleDateString();
+            setValidationError(false);
+            
+            // Generar folio único
+            const folioNumber = Math.floor(1000 + Math.random() * 9000);
+            const folio = `#COT-${folioNumber}`;
 
-            // Colors
-            const primaryColor = [245, 158, 11]; // Amber-500
+            // 1. Generar y Descargar PDF usando el utilitario
+            const pdfItems = cartItems.map(item => ({
+                sku: item.product.sku || 'N/A',
+                name: item.product.name,
+                quantity: item.quantity
+            }));
 
-            // Header - Company Info (Draw rectangle first so logo appears on top)
-            doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-            doc.rect(0, 0, 210, 40, 'F');
+            await generateQuotationPDF(folio, pdfItems, profile);
 
-            // Load and Add Logo
-            let logoAdded = false;
-            try {
-                const logoImg = new Image();
-                logoImg.src = '/logo.png';
-                // Wait for image to load
-                await new Promise((resolve, reject) => {
-                    logoImg.onload = resolve;
-                    logoImg.onerror = reject;
-                });
-                doc.addImage(logoImg, 'PNG', 15, 7, 24, 24);
-                logoAdded = true;
-            } catch (err) {
-                console.error('No se pudo cargar el logo para el PDF:', err);
+            // 2. Guardar en Base de Datos
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                // 1. Insertar Cabecera
+                const { data: quoteData, error: quoteError } = await supabase
+                    .from('cotizaciones')
+                    .insert({
+                        user_id: session.user.id,
+                        folio: folio,
+                        total_items: cartItems.length
+                    })
+                    .select()
+                    .single();
+
+                if (quoteError) throw quoteError;
+
+                // 2. Insertar Items
+                if (quoteData) {
+                    const itemsToInsert = cartItems.map(item => ({
+                        cotizacion_id: quoteData.id,
+                        product_id: item.product.id,
+                        sku: item.product.sku || 'N/A',
+                        name: item.product.name,
+                        quantity: item.quantity
+                    }));
+
+                    const { error: itemsError } = await supabase
+                        .from('cotizaciones_items')
+                        .insert(itemsToInsert);
+
+                    if (itemsError) throw itemsError;
+                }
             }
             
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(22);
-            doc.setFont('helvetica', 'bold');
-            // Shift text if logo is added
-            const textX = logoAdded ? 45 : 15;
-            doc.text('CORDOBESA REFACCIONES', textX, 25);
-            
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text('C. Altamirano, Zapotal, 96039 Acayucan, Ver.', textX, 32);
-            doc.text('ventas@refaccionariacordobesa.com | Tel: 924 688 6220', textX, 37);
-
-            // Quote Info
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(18);
-            doc.setFont('helvetica', 'bold');
-            doc.text('COTIZACIÓN', 15, 55);
-            
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Fecha: ${date}`, 155, 55);
-            doc.text(`Folio: #COT-${Math.floor(Math.random() * 10000)}`, 155, 60);
-
-            // Client Info
-            doc.setDrawColor(230, 230, 230);
-            doc.line(15, 65, 195, 65);
-            
-            doc.setFont('helvetica', 'bold');
-            doc.text('DATOS DEL CLIENTE:', 15, 75);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Nombre: ${profile?.first_name || 'Publico en General'} ${profile?.last_name || ''}`, 15, 82);
-            doc.text(`RFC: ${profile?.rfc || 'N/A'}`, 15, 87);
-            doc.text(`Tel: ${profile?.phone || 'N/A'}`, 15, 92);
-            
-            if (profile?.is_corporate) {
-                doc.text(`Empresa: ${profile.corporate_name}`, 110, 82);
-                doc.text(`RFC Corp: ${profile.rfc}`, 110, 87);
-            }
-
-            // Table
-            const tableData = cartItems.map((item, index) => [
-                index + 1,
-                item.product.sku || 'N/A',
-                item.product.name,
-                item.quantity,
-                'A COTIZAR'
-            ]);
-
-            autoTable(doc, {
-                startY: 100,
-                head: [['#', 'SKU / PARTE', 'DESCRIPCIÓN DEL PRODUCTO', 'CANT', 'PRECIO UNIT.']],
-                body: tableData,
-                headStyles: { fillColor: primaryColor as any, textColor: [0, 0, 0], fontStyle: 'bold' },
-                alternateRowStyles: { fillColor: [250, 250, 250] },
-                margin: { left: 15, right: 15 }
-            });
-
-            // Footer
-            const finalY = (doc as any).lastAutoTable.finalY + 15;
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'italic');
-            doc.text('NOTAS IMPORTANTES:', 15, finalY);
-            doc.text('1. Esta cotización tiene una vigencia de 5 días hábiles.', 15, finalY + 5);
-            doc.text('2. Precios sujetos a cambio sin previo aviso.', 15, finalY + 10);
-            doc.text('3. Tiempo de entrega aproximado de 1 a 3 días hábiles.', 15, finalY + 15);
-
-            // Download
-            const fileName = `Cotizacion_${date.replace(/[\/]/g, '-')}.pdf`;
-            doc.save(fileName);
+            // Limpiar el carrito tras generar la cotización
+            clearCart();
         } catch (err) {
-            console.error('Error al generar el PDF:', err);
-            alert('Ocurrió un problema al generar el PDF. Por favor, intenta de nuevo.');
+            console.error('Error al generar la cotización:', err);
+            alert('Ocurrió un problema al procesar la cotización. Por favor, intenta de nuevo.');
         } finally {
             setGenerating(false);
         }
@@ -171,26 +137,46 @@ export function CotizadorView() {
 
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto">
+            {validationError && (
+                <div className="mb-8 p-6 bg-red-50 border-2 border-red-100 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 animate-in zoom-in-95 duration-300 shadow-lg shadow-red-100/50">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+                            <AlertCircle className="w-7 h-7 text-red-600" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-black text-red-900 tracking-tight">¡Perfil Incompleto!</h3>
+                            <p className="text-red-600 font-bold">Necesitamos tu nombre y teléfono para procesar tu cotización.</p>
+                        </div>
+                    </div>
+                    <Link 
+                        to="/perfil" 
+                        className="w-full md:w-auto px-8 py-4 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 transition-all shadow-md shadow-red-200 active:scale-95"
+                    >
+                        Completar mi Perfil ahora
+                    </Link>
+                </div>
+            )}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 border-b border-gray-100 pb-10">
                 <div>
                     <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter mb-2">Generar Cotización</h1>
                     <p className="text-gray-400 font-bold flex items-center gap-2 italic">
                         <ClipboardList className="w-5 h-5" />
-                        Estás a punto de descargar un presupuesto formal con {cartItems.length} productos.
+                        Estás a punto de descargar y recibir por correo un presupuesto formal con {cartItems.length} productos.
                     </p>
                 </div>
                 <div className="flex items-center gap-4 w-full lg:w-auto">
                     <button 
                         onClick={generatePDF}
                         disabled={generating}
-                        className="flex-1 lg:flex-none flex items-center justify-center gap-3 px-8 py-5 bg-amber-500 text-amber-950 rounded-[1.5rem] font-black shadow-xl shadow-amber-200/50 hover:bg-amber-600 transition-all active:scale-95 disabled:opacity-50"
+                        className="flex-1 lg:flex-none flex items-center justify-center gap-3 px-8 py-5 bg-[#fdc401] text-black rounded-[1.5rem] font-black shadow-xl shadow-[#fdc401]/20 hover:bg-[#cc9e01] transition-all active:scale-95 disabled:opacity-50"
                     >
-                        {generating ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileDown className="w-6 h-6" />}
-                        Descargar PDF
-                    </button>
-                    <button className="flex-1 lg:flex-none flex items-center justify-center gap-3 px-8 py-5 bg-gray-900 text-white rounded-[1.5rem] font-black hover:bg-black transition-all active:scale-95 group">
-                        <Send className="w-6 h-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                        Enviar por Correo
+                        {generating ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                            <div className="flex items-center gap-2">
+                                <Send className="w-5 h-5" />
+                                <FileDown className="w-5 h-5" />
+                            </div>
+                        )}
+                        Enviar y Descargar PDF
                     </button>
                 </div>
             </div>

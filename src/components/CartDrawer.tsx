@@ -23,12 +23,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             {/* Drawer */}
             <aside className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-[101] shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
                 {/* Header */}
-                <div className="p-6 bg-amber-500 text-amber-950 flex items-center justify-between shadow-sm">
+                <div className="p-6 bg-[#fdc401] text-black flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-3">
                         <div className="relative">
                             <ShoppingCart className="w-6 h-6" />
                             {totalItems > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center ring-2 ring-amber-500">
+                                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center ring-2 ring-[#fdc401]">
                                     {totalItems}
                                 </span>
                             )}
@@ -37,7 +37,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     </div>
                     <button 
                         onClick={onClose}
-                        className="p-2 hover:bg-amber-600 rounded-xl transition-colors"
+                        className="p-2 hover:bg-[#cc9e01] rounded-xl transition-colors"
                     >
                         <X className="w-6 h-6" />
                     </button>
@@ -55,7 +55,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         </div>
                     ) : (
                         cartItems.map((item) => (
-                            <div key={item.product.id} className="flex gap-4 p-4 rounded-2xl bg-gray-50/50 border border-gray-100 group hover:border-amber-200 hover:bg-amber-50/20 transition-all duration-300">
+                            <div key={item.product.id} className="flex gap-4 p-4 rounded-2xl bg-gray-50/50 border border-gray-100 group hover:border-[#fdc401]/30 hover:bg-[#fdc401]/5 transition-all duration-300">
                                 <div className="w-20 h-20 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 flex items-center justify-center">
                                     {item.product.image_url ? (
                                         <img src={item.product.image_url} alt="" className="w-full h-full object-cover" />
@@ -64,7 +64,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h4 className="font-bold text-gray-900 truncate uppercase tracking-tight group-hover:text-amber-700 transition-colors">
+                                    <h4 className="font-bold text-gray-900 truncate uppercase tracking-tight group-hover:text-[#917101] transition-colors">
                                         {item.product.name}
                                     </h4>
                                     <p className="text-xs font-mono text-gray-400 mb-4 truncate uppercase tracking-widest">{item.product.sku || 'N/A'}</p>
@@ -104,12 +104,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="font-black text-gray-400 uppercase tracking-widest text-xs">Total de Productos:</span>
-                                <span className="font-black text-gray-900 bg-amber-200 px-3 py-1 rounded-full text-sm">{totalItems}</span>
+                                <span className="font-black text-gray-900 bg-[#fdc401]/30 px-3 py-1 rounded-full text-sm">{totalItems}</span>
                             </div>
                             <Link 
                                 to="/cotizador"
                                 onClick={onClose}
-                                className="w-full flex items-center justify-center gap-3 bg-amber-500 hover:bg-amber-600 text-amber-950 px-8 py-5 rounded-[1.5rem] font-black text-lg shadow-xl shadow-amber-200/50 transition-all active:scale-95 group"
+                                className="w-full flex items-center justify-center gap-3 bg-[#fdc401] hover:bg-[#cc9e01] text-black px-8 py-5 rounded-[1.5rem] font-black text-lg shadow-xl shadow-[#fdc401]/20 transition-all active:scale-95 group"
                             >
                                 <ClipboardList className="w-6 h-6" />
                                 Ir al Cotizador

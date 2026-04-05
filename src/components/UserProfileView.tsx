@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { User, MapPin, Package, FileText, Save, Loader2, CheckCircle, AlertCircle, Construction, ArrowLeft, Edit3, Plus, Trash2, Home, Phone, Calendar, ClipboardCheck, Building2, Briefcase } from 'lucide-react';
+import { User, MapPin, Package, FileText, Save, Loader2, CheckCircle, AlertCircle, Construction, ArrowLeft, Edit3, Plus, Trash2, Home, Phone, Calendar, ClipboardCheck, Building2, Briefcase, Search, Hash, ChevronRight, Filter, X as CloseIcon, FileDown } from 'lucide-react';
+import { generateQuotationPDF } from '../lib/pdfGenerator';
 import { InputRFC } from './InputRFC';
 
 type Section = 'perfil' | 'direcciones' | 'pedidos' | 'cotizaciones';
@@ -30,6 +31,22 @@ interface UserProfile {
     rfc: string;
     corporate_phone: string;
     is_rfc_valid?: boolean;
+}
+
+interface CotizacionItem {
+    id: string;
+    sku: string;
+    name: string;
+    quantity: number;
+    product_id: string;
+}
+
+interface Cotizacion {
+    id: string;
+    folio: string;
+    created_at: string;
+    total_items: number;
+    items?: CotizacionItem[];
 }
 
 export function UserProfileView() {
@@ -69,6 +86,12 @@ export function UserProfileView() {
         es_principal: false
     });
 
+    // Cotizaciones State
+    const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
+    const [selectedCotizacion, setSelectedCotizacion] = useState<Cotizacion | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [dateFilter, setDateFilter] = useState('');
+
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     useEffect(() => {
@@ -79,9 +102,43 @@ export function UserProfileView() {
         setLoading(true);
         await Promise.all([
             fetchProfile(),
-            fetchAddresses()
+            fetchAddresses(),
+            fetchCotizaciones()
         ]);
         setLoading(false);
+    };
+
+    const fetchCotizaciones = async () => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) return;
+
+            const { data, error } = await supabase
+                .from('cotizaciones')
+                .select(`
+                    *,
+                    items:cotizaciones_items(*)
+                `)
+                .eq('user_id', session.user.id)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setCotizaciones(data || []);
+        } catch (err) {
+            console.error('Error fetching cotizaciones:', err);
+        }
+    };
+
+    const handleDownloadPDF = async (cot: Cotizacion) => {
+        const pdfItems = cot.items?.map(item => ({
+            sku: item.sku,
+            name: item.name,
+            quantity: item.quantity
+        })) || [];
+
+        const dateStr = new Date(cot.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        
+        await generateQuotationPDF(cot.folio, pdfItems, profile, dateStr);
     };
 
     const fetchProfile = async () => {
@@ -142,6 +199,18 @@ export function UserProfileView() {
 
     const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Manual validation for Phone (10 digits)
+        if (profile.phone && !/^[0-9]{10}$/.test(profile.phone)) {
+            setMessage({ type: 'error', text: 'El teléfono debe tener exactamente 10 dígitos.' });
+            return;
+        }
+
+        // Manual validation for Corporate Phone (10 digits)
+        if (profile.is_corporate && profile.corporate_phone && !/^[0-9]{10}$/.test(profile.corporate_phone)) {
+            setMessage({ type: 'error', text: 'El teléfono corporativo debe tener exactamente 10 dígitos.' });
+            return;
+        }
 
         // Manual validation for RFC if corporate is enabled
         if (profile.is_corporate && !profile.is_rfc_valid) {
@@ -385,7 +454,20 @@ export function UserProfileView() {
                                             {isEditing ? (
                                                 <div className="relative">
                                                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                                    <input type="tel" value={profile.phone} onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))} className="w-full pl-12 pr-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none font-medium" placeholder="Opcional" />
+                                                    <input 
+                                                        type="tel" 
+                                                        maxLength={10}
+                                                        value={profile.phone} 
+                                                        onChange={(e) => {
+                                                            const val = e.target.value.replace(/[^0-9]/g, '');
+                                                            if (val.length <= 10) setProfile(prev => ({ ...prev, phone: val }));
+                                                        }} 
+                                                        className={`w-full pl-12 pr-5 py-4 bg-gray-50 border rounded-2xl outline-none font-medium transition-all ${profile.phone && profile.phone.length !== 10 ? 'border-amber-300 bg-amber-50/20' : 'border-gray-200 focus:bg-white'}`} 
+                                                        placeholder="Ej. 9241234567" 
+                                                    />
+                                                    {profile.phone && profile.phone.length > 0 && profile.phone.length < 10 && (
+                                                        <p className="text-[10px] text-amber-600 font-bold mt-1 ml-1 animate-in fade-in slide-in-from-top-1">Faltan {10 - profile.phone.length} dígitos</p>
+                                                    )}
                                                 </div>
                                             ) : (
                                                 <p className="px-1 text-lg font-bold text-gray-800">{profile.phone || 'No especificado'}</p>
@@ -470,7 +552,20 @@ export function UserProfileView() {
                                                                 {isEditing ? (
                                                                     <div className="relative max-w-sm">
                                                                         <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                                                        <input type="tel" value={profile.corporate_phone} onChange={(e) => setProfile(prev => ({ ...prev, corporate_phone: e.target.value }))} className="w-full pl-12 pr-5 py-4 bg-white border border-gray-200 rounded-2xl outline-none font-medium" placeholder="Opcional" />
+                                                                        <input 
+                                                                            type="tel" 
+                                                                            maxLength={10}
+                                                                            value={profile.corporate_phone} 
+                                                                            onChange={(e) => {
+                                                                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                                                                if (val.length <= 10) setProfile(prev => ({ ...prev, corporate_phone: val }));
+                                                                            }} 
+                                                                            className={`w-full pl-12 pr-5 py-4 bg-white border rounded-2xl outline-none font-medium transition-all ${profile.corporate_phone && profile.corporate_phone.length !== 10 ? 'border-amber-300 bg-amber-50/20' : 'border-gray-200 focus:bg-white'}`} 
+                                                                            placeholder="Ej. 9241234567" 
+                                                                        />
+                                                                        {profile.corporate_phone && profile.corporate_phone.length > 0 && profile.corporate_phone.length < 10 && (
+                                                                            <p className="text-[10px] text-amber-600 font-bold mt-1 ml-1 animate-in fade-in slide-in-from-top-1">Faltan {10 - profile.corporate_phone.length} dígitos</p>
+                                                                        )}
                                                                     </div>
                                                                 ) : (
                                                                     <p className="px-1 text-lg font-bold text-gray-800">{profile.corporate_phone || 'No especificado'}</p>
@@ -640,8 +735,152 @@ export function UserProfileView() {
                             </div>
                         )}
 
+                        {/* --- COTIZACIONES --- */}
+                        {activeSection === 'cotizaciones' && (
+                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10 border-b border-gray-50 pb-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="bg-amber-50 p-3.5 rounded-2xl text-amber-600">
+                                            <FileText className="w-7 h-7" />
+                                        </div>
+                                        <div>
+                                            <h1 className="text-2xl font-black text-gray-900">Mis Cotizaciones</h1>
+                                            <p className="text-gray-400 text-sm mt-0.5">Consulta y descarga tus presupuestos previos</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Filters */}
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <div className="relative group">
+                                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-amber-500 transition-colors" />
+                                            <input 
+                                                type="text" 
+                                                placeholder="Part Number o Folio..." 
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all w-full sm:w-64"
+                                            />
+                                        </div>
+                                        <div className="relative">
+                                            <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                            <input 
+                                                type="date" 
+                                                value={dateFilter}
+                                                onChange={(e) => setDateFilter(e.target.value)}
+                                                className="pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {selectedCotizacion ? (
+                                    <div className="animate-in zoom-in duration-300">
+                                        <button 
+                                            onClick={() => setSelectedCotizacion(null)}
+                                            className="mb-6 flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-amber-600 transition-colors"
+                                        >
+                                            <ArrowLeft className="w-4 h-4" /> Volver al listado
+                                        </button>
+                                        
+                                        <div className="bg-gray-50/50 rounded-3xl border border-gray-100 p-8">
+                                            <div className="flex flex-col md:flex-row justify-between gap-6 mb-8">
+                                                <div>
+                                                    <h2 className="text-3xl font-black text-gray-900 mb-2">{selectedCotizacion.folio}</h2>
+                                                    <p className="text-gray-500 font-medium flex items-center gap-2">
+                                                        <Calendar className="w-4 h-4" />
+                                                        Emisión: {new Date(selectedCotizacion.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+                                                <table className="w-full text-left">
+                                                    <thead className="bg-gray-50 border-b border-gray-100">
+                                                        <tr>
+                                                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">SKU / Parte</th>
+                                                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Descripción</th>
+                                                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Cant.</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-gray-50">
+                                                        {selectedCotizacion.items?.map((item) => (
+                                                            <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                                                                <td className="px-6 py-4 text-sm font-mono font-bold text-blue-600">{item.sku}</td>
+                                                                <td className="px-6 py-4 text-sm font-bold text-gray-700">{item.name}</td>
+                                                                <td className="px-6 py-4 text-sm font-black text-gray-900 text-center">{item.quantity}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {cotizaciones
+                                            .filter(c => {
+                                                const matchesSearch = c.folio.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                                                    c.items?.some(i => i.sku.toLowerCase().includes(searchTerm.toLowerCase()) || i.name.toLowerCase().includes(searchTerm.toLowerCase()));
+                                                const matchesDate = !dateFilter || c.created_at.startsWith(dateFilter);
+                                                return matchesSearch && matchesDate;
+                                            })
+                                            .map((cot) => (
+                                                <div 
+                                                    key={cot.id}
+                                                    onClick={() => setSelectedCotizacion(cot)}
+                                                    className="group bg-white border border-gray-100 p-6 rounded-3xl hover:border-amber-200 hover:shadow-xl hover:shadow-amber-500/5 transition-all cursor-pointer flex items-center justify-between"
+                                                >
+                                                    <div className="flex items-center gap-6">
+                                                        <div className="bg-amber-50 p-4 rounded-2xl text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                                                            <Hash className="w-6 h-6" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xl font-black text-gray-900 mb-0.5">{cot.folio}</p>
+                                                            <div className="flex items-center gap-4 text-sm font-medium text-gray-400">
+                                                                <span className="flex items-center gap-1.5">
+                                                                    <Calendar className="w-3.5 h-3.5" />
+                                                                    {new Date(cot.created_at).toLocaleDateString('es-MX')}
+                                                                </span>
+                                                                <span className="flex items-center gap-1.5">
+                                                                    <Package className="w-3.5 h-3.5" />
+                                                                    {cot.total_items} articulos
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDownloadPDF(cot);
+                                                            }}
+                                                            title="Descargar PDF"
+                                                            className="p-3 bg-gray-50 text-gray-400 hover:bg-amber-500 hover:text-white rounded-xl transition-all"
+                                                        >
+                                                            <FileDown className="w-5 h-5" />
+                                                        </button>
+                                                        <ChevronRight className="w-6 h-6 text-gray-300 group-hover:text-amber-500 group-hover:translate-x-1 transition-all" />
+                                                    </div>
+                                                </div>
+                                            ))
+                                        }
+
+                                        {cotizaciones.length === 0 && !loading && (
+                                            <div className="flex flex-col items-center justify-center py-20 text-center bg-gray-50/50 rounded-[2rem] border border-dashed border-gray-200">
+                                                <div className="bg-white p-6 rounded-full shadow-sm text-gray-300 mb-4">
+                                                    <FileText className="w-10 h-10" />
+                                                </div>
+                                                <h3 className="text-xl font-bold text-gray-900">No tienes cotizaciones guardadas</h3>
+                                                <p className="text-gray-500 mt-1">Tus presupuestos generados en el cotizador aparecerán aquí automáticamente.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* --- OTROS --- */}
-                        {(activeSection === 'pedidos' || activeSection === 'cotizaciones') && (
+                        {activeSection === 'pedidos' && (
                             <div className="flex flex-col items-center justify-center py-32 text-center animate-in fade-in zoom-in duration-500">
                                 <div className="bg-amber-50 p-8 rounded-full mb-8 border border-amber-100 text-amber-500">
                                     <Construction className="h-16 w-16" />

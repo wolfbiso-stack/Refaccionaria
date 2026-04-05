@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Users, Plus, ShieldAlert, User, Trash2, Activity } from 'lucide-react';
+import { Users, Plus, ShieldAlert, User, Activity } from 'lucide-react';
 import { EmployeeFormModal } from './EmployeeFormModal';
 import { EmployeeActivityModal } from './EmployeeActivityModal';
 
@@ -9,62 +9,84 @@ export interface UserProfile {
     email: string;
     first_name?: string;
     last_name?: string;
-    role: 'admin' | 'empleado';
+    role: 'admin' | 'empleado' | 'usuario';
 }
 
 export function EmployeeManagement() {
-    const [employees, setEmployees] = useState<UserProfile[]>([]);
+    const [users, setUsers] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<'personal' | 'clientes'>('personal');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedEmployee, setSelectedEmployee] = useState<UserProfile | null>(null);
+    const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
-    const [activityEmployee, setActivityEmployee] = useState<UserProfile | null>(null);
+    const [activityUser, setActivityUser] = useState<UserProfile | null>(null);
 
-    const fetchEmployees = async () => {
+    const fetchUsers = async () => {
         try {
             setLoading(true);
             const { data, error } = await supabase
                 .from('user_profiles')
                 .select('*')
-                .order('role', { ascending: true }) // admins first ideally
+                .order('role', { ascending: true })
                 .order('email', { ascending: true });
 
             if (error) throw error;
-            setEmployees(data || []);
+            setUsers(data || []);
         } catch (error) {
-            console.error('Error fetching employees:', error);
+            console.error('Error fetching users:', error);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchEmployees();
+        fetchUsers();
     }, []);
+
+    const filteredUsers = users.filter(user => {
+        if (activeTab === 'personal') return user.role === 'admin' || user.role === 'empleado';
+        return user.role === 'usuario';
+    });
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                    <div className="bg-emerald-100 p-3 rounded-full text-emerald-600">
+                    <div className="bg-blue-100 p-3 rounded-full text-blue-600">
                         <Users className="w-6 h-6" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Gestión de Empleados</h1>
-                        <p className="text-gray-500 text-sm">Administra los accesos y roles de tu personal</p>
+                        <h1 className="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
+                        <p className="text-gray-500 text-sm">Administra los accesos y roles de tu plataforma</p>
                     </div>
                 </div>
 
                 <button
                     onClick={() => {
-                        setSelectedEmployee(null);
+                        setSelectedUser(null);
                         setIsModalOpen(true);
                     }}
-                    className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors"
+                    className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-bold rounded-xl text-black bg-[#fdc401] hover:bg-[#cc9e01] shadow-sm transition-all active:scale-95"
                 >
                     <Plus className="w-5 h-5 mr-2" />
-                    Registrar Empleado
+                    Registrar Nuevo
+                </button>
+            </div>
+
+            {/* Tabs Selector */}
+            <div className="flex p-1 bg-gray-100 rounded-xl w-fit">
+                <button
+                    onClick={() => setActiveTab('personal')}
+                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'personal' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                    Personal de la Empresa
+                </button>
+                <button
+                    onClick={() => setActiveTab('clientes')}
+                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'clientes' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                    Usuarios Generales
                 </button>
             </div>
 
@@ -77,55 +99,65 @@ export function EmployeeManagement() {
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 text-sm uppercase tracking-wider">
-                                    <th className="px-6 py-4 font-semibold">Nombre Completo</th>
-                                    <th className="px-6 py-4 font-semibold">Correo Electrónico</th>
-                                    <th className="px-6 py-4 font-semibold">Rol</th>
-                                    <th className="px-6 py-4 font-semibold text-right">Acciones</th>
+                                <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 text-[10px] uppercase tracking-[0.2em]">
+                                    <th className="px-6 py-4 font-black">Nombre Completo</th>
+                                    <th className="px-6 py-4 font-black">Correo Electrónico</th>
+                                    <th className="px-6 py-4 font-black">Rol</th>
+                                    <th className="px-6 py-4 font-black text-right">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {employees.map((emp) => (
+                                {filteredUsers.map((emp) => (
                                     <tr key={emp.id} className="hover:bg-gray-50/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-full ${emp.role === 'admin' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-500'}`}>
-                                                    {emp.role === 'admin' ? <ShieldAlert className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                                                <div className={`p-2 rounded-full ${
+                                                    emp.role === 'admin' ? 'bg-yellow-100 text-yellow-600' : 
+                                                    emp.role === 'empleado' ? 'bg-blue-100 text-blue-600' : 
+                                                    'bg-gray-100 text-gray-500'
+                                                }`}>
+                                                    {emp.role === 'admin' ? <ShieldAlert className="w-4 h-4" /> : 
+                                                     emp.role === 'empleado' ? <Users className="w-4 h-4" /> : 
+                                                     <User className="w-4 h-4" />}
                                                 </div>
-                                                <span className="font-semibold text-gray-900">
+                                                <span className="font-bold text-gray-900">
                                                     {emp.first_name || emp.last_name ? `${emp.first_name || ''} ${emp.last_name || ''}` : 'Sin nombre registrado'}
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-600">{emp.email}</td>
+                                        <td className="px-6 py-4 text-gray-600 font-medium">{emp.email}</td>
                                         <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide
-                        ${emp.role === 'admin' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' : 'bg-gray-100 text-gray-600 border border-gray-200'}
-                      `}>
-                                                {emp.role}
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border
+                                                ${emp.role === 'admin' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' : 
+                                                  emp.role === 'empleado' ? 'bg-blue-50 text-blue-800 border-blue-200' : 
+                                                  'bg-gray-50 text-gray-600 border-gray-200'}
+                                            `}>
+                                                {emp.role === 'admin' ? 'ADMINISTRADOR' : 
+                                                 emp.role === 'empleado' ? 'EMPLEADO' : 
+                                                 'USUARIO'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex justify-end gap-2">
                                                 <button
                                                     onClick={() => {
-                                                        setActivityEmployee(emp);
+                                                        setActivityUser(emp);
                                                         setIsActivityModalOpen(true);
                                                     }}
-                                                    className="inline-flex items-center text-gray-600 hover:text-gray-900 text-sm font-medium bg-gray-50 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors border border-gray-200"
+                                                    className="inline-flex items-center text-gray-600 hover:text-gray-900 text-xs font-black bg-gray-50 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors border border-gray-100"
                                                     title="Ver Actividad"
                                                 >
                                                     <Activity className="h-4 w-4 sm:mr-1.5" />
-                                                    <span className="hidden sm:inline">Actividad</span>
+                                                    <span className="hidden sm:inline uppercase">Actividad</span>
                                                 </button>
                                                 <button
                                                     onClick={() => {
-                                                        setSelectedEmployee(emp);
+                                                        setSelectedUser(emp);
                                                         setIsModalOpen(true);
                                                     }}
-                                                    className="text-blue-600 hover:text-blue-900 text-sm font-medium bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                                                    className="text-blue-600 hover:text-blue-900 text-xs font-black bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors uppercase"
                                                 >
-                                                    Editar
+                                                    Gestionar
                                                 </button>
                                                 <button
                                                     onClick={async () => {
@@ -133,14 +165,14 @@ export function EmployeeManagement() {
                                                             try {
                                                                 const { error } = await supabase.rpc('delete_user', { target_user_id: emp.id });
                                                                 if (error) throw error;
-                                                                fetchEmployees();
+                                                                fetchUsers();
                                                             } catch (err) {
                                                                 console.error("Error eliminando usuario:", err);
-                                                                alert("No se pudo eliminar el usuario. Asegúrate de haber ejecutado el script SQL en Supabase.");
+                                                                alert("No se pudo eliminar el usuario.");
                                                             }
                                                         }
                                                     }}
-                                                    className="text-red-600 hover:text-red-900 text-sm font-medium bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors"
+                                                    className="text-red-600 hover:text-red-900 text-xs font-black bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors uppercase"
                                                 >
                                                     Eliminar
                                                 </button>
@@ -148,10 +180,10 @@ export function EmployeeManagement() {
                                         </td>
                                     </tr>
                                 ))}
-                                {employees.length === 0 && (
+                                {filteredUsers.length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                                            No se encontraron usuarios registrados.
+                                        <td colSpan={4} className="px-6 py-12 text-center text-gray-500 font-bold uppercase text-xs tracking-widest">
+                                            No se encontraron {activeTab === 'personal' ? 'empleados registrados' : 'usuarios generales'}.
                                         </td>
                                     </tr>
                                 )}
@@ -163,24 +195,24 @@ export function EmployeeManagement() {
 
             <EmployeeFormModal
                 isOpen={isModalOpen}
-                initialEmployee={selectedEmployee}
+                initialEmployee={selectedUser}
                 onClose={() => {
                     setIsModalOpen(false);
-                    setSelectedEmployee(null);
+                    setSelectedUser(null);
                 }}
                 onSuccess={() => {
                     setIsModalOpen(false);
-                    setSelectedEmployee(null);
-                    fetchEmployees();
+                    setSelectedUser(null);
+                    fetchUsers();
                 }}
             />
 
             <EmployeeActivityModal
                 isOpen={isActivityModalOpen}
-                employee={activityEmployee}
+                employee={activityUser}
                 onClose={() => {
                     setIsActivityModalOpen(false);
-                    setActivityEmployee(null);
+                    setActivityUser(null);
                 }}
             />
 

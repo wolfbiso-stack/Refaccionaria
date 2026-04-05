@@ -1,31 +1,38 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Menu, User, LogOut, Info, Truck, MapPin, FileText, Search, ClipboardList, ShoppingCart, ShieldAlert } from 'lucide-react';
+import { Menu, User, LogOut, Info, MapPin, Search, ClipboardList, ShoppingCart, ShieldAlert } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 interface HeaderProps {
   onOpenSidebar: () => void;
   isAuthenticated: boolean;
   userRole?: 'admin' | 'empleado' | 'usuario' | null;
+  userProfile?: any;
+  email?: string;
   onLoginClick: () => void;
   onLogoutClick: () => void;
   onOpenCart: () => void;
 }
 
-export function Header({ onOpenSidebar, isAuthenticated, userRole, onLoginClick, onLogoutClick, onOpenCart }: HeaderProps) {
+export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, email, onLoginClick, onLogoutClick, onOpenCart }: HeaderProps) {
   const { totalItems } = useCart();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDropdown(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -72,22 +79,16 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, onLoginClick,
   return (
     <header className="relative z-20 font-sans">
       {/* Top Bar */}
-      <div className="bg-amber-600 text-amber-950 text-xs sm:text-sm border-b border-amber-700/20">
+      <div className="bg-[#fdc401] text-amber-950 text-xs sm:text-sm border-b border-black/5">
         <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12">
           <div className="flex justify-between items-center h-10">
             <div className="flex items-center space-x-6 overflow-x-auto no-scrollbar">
-              <a href="#" className="flex items-center hover:text-white whitespace-nowrap transition-colors">
+              <Link to="/ayuda-contacto" className="flex items-center hover:text-white whitespace-nowrap transition-colors">
                 <Info className="w-4 h-4 mr-1.5" /> Ayuda y Contacto
-              </a>
-              <a href="#" className="flex items-center hover:text-white whitespace-nowrap transition-colors hidden sm:flex">
-                <Truck className="w-4 h-4 mr-1.5" /> Seguimiento
-              </a>
+              </Link>
               <Link to="/sucursales" className="flex items-center hover:text-white whitespace-nowrap transition-colors hidden md:flex">
                 <MapPin className="w-4 h-4 mr-1.5" /> Sucursales
               </Link>
-              <a href="#" className="flex items-center hover:text-white whitespace-nowrap transition-colors hidden lg:flex">
-                <FileText className="w-4 h-4 mr-1.5" /> Facturación electrónica
-              </a>
             </div>
             <div className="hidden lg:flex items-center space-x-6">
 
@@ -97,7 +98,7 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, onLoginClick,
       </div>
 
       {/* Main Bar */}
-      <div className="bg-amber-500 text-amber-950 shadow-md">
+      <div className="bg-[#fdc401] text-amber-950 shadow-md">
         <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 py-3 lg:py-5">
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
 
@@ -110,7 +111,7 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, onLoginClick,
 
               <button
                 onClick={onOpenSidebar}
-                className="ml-4 flex items-center space-x-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-950 px-4 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-amber-600"
+                className="ml-4 flex items-center space-x-2 bg-black/10 hover:bg-black/20 text-amber-950 px-4 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-black"
               >
                 <Menu className="w-5 h-5" />
                 <span className="font-bold hidden md:block">Menú de categorías</span>
@@ -190,24 +191,62 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, onLoginClick,
             {/* Action Icons */}
             <div className="flex items-center space-x-6 lg:space-x-8 w-full lg:w-auto justify-center lg:justify-end mt-4 lg:mt-0">
 
-              {isAuthenticated && userRole === 'admin' && (
-                <a href="#/dashboard" className="flex flex-col items-center group relative mt-1">
-                  <ShieldAlert className="w-6 h-6 mb-1 text-amber-950/70 group-hover:text-amber-950 transition-colors" />
-                  <span className="text-xs font-semibold text-amber-950/70 group-hover:text-amber-950 transition-colors">Admin</span>
-                </a>
-              )}
-
               {isAuthenticated ? (
-                <div className="flex items-center space-x-6 lg:space-x-8">
-                  <Link to="/perfil" className="flex flex-col items-center group relative mt-1">
-                    <User className="w-6 h-6 mb-1 text-amber-950/70 group-hover:text-amber-950 transition-colors" />
-                    <span className="text-xs font-semibold text-amber-950/70 group-hover:text-amber-950 transition-colors">Mi Perfil</span>
-                  </Link>
-
-                  <button onClick={onLogoutClick} className="flex flex-col items-center group relative mt-1">
-                    <LogOut className="w-6 h-6 mb-1 text-amber-950/70 group-hover:text-amber-950 transition-colors" />
-                    <span className="text-xs font-semibold text-amber-950/70 group-hover:text-amber-950 transition-colors">Salir</span>
+                <div className="relative mt-1" ref={userMenuRef}>
+                  <button 
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center space-x-3 bg-black/5 hover:bg-black/10 px-4 py-2 rounded-xl transition-all border border-black/5 group"
+                  >
+                    <div className="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center border border-black/5 group-hover:bg-black/20 transition-colors">
+                      <User className="w-5 h-5 text-amber-950" />
+                    </div>
+                    <div className="text-left hidden sm:block">
+                      <p className="text-xs font-black text-amber-950 truncate max-w-[120px]">
+                        {userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : (email || 'Usuario')}
+                      </p>
+                      <p className="text-[10px] font-bold text-amber-900/60 leading-none">Mi Cuenta</p>
+                    </div>
                   </button>
+
+                  {/* User Dropdown Menu */}
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="p-4 bg-gray-50/50 border-b border-gray-100">
+                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Usuario</p>
+                        <p className="text-sm font-bold text-gray-900 truncate">{email}</p>
+                      </div>
+                      <div className="p-2">
+                        <Link 
+                          to="/perfil" 
+                          onClick={() => setShowUserMenu(false)}
+                          className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-gray-700 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-all"
+                        >
+                          <User className="w-4 h-4" />
+                          Ver Perfil
+                        </Link>
+                        {(userRole === 'admin' || userRole === 'empleado') && (
+                          <Link 
+                            to="/dashboard" 
+                            onClick={() => setShowUserMenu(false)}
+                            className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-gray-700 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-all"
+                          >
+                            <ShieldAlert className="w-4 h-4" />
+                            {userRole === 'admin' ? 'Panel Admin' : 'Panel Empleado'}
+                          </Link>
+                        )}
+                        <button 
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            onLogoutClick();
+                          }}
+                          className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all text-left mt-1"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Cerrar Sesión
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <button onClick={onLoginClick} className="flex flex-col items-center group relative mt-1">

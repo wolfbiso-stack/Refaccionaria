@@ -18,7 +18,7 @@ export function EmployeeFormModal({ isOpen, onClose, onSuccess, initialEmployee 
         password: '',
         first_name: '',
         last_name: '',
-        role: 'empleado' as 'admin' | 'empleado'
+        role: 'usuario' as 'admin' | 'empleado' | 'usuario'
     });
 
     React.useEffect(() => {
@@ -29,10 +29,10 @@ export function EmployeeFormModal({ isOpen, onClose, onSuccess, initialEmployee 
                     password: '',
                     first_name: initialEmployee.first_name || '',
                     last_name: initialEmployee.last_name || '',
-                    role: initialEmployee.role || 'empleado',
+                    role: (initialEmployee.role as 'admin' | 'empleado' | 'usuario') || 'usuario',
                 });
             } else {
-                setFormData({ email: '', password: '', first_name: '', last_name: '', role: 'empleado' });
+                setFormData({ email: '', password: '', first_name: '', last_name: '', role: 'usuario' });
             }
             setError(null);
         }
@@ -52,7 +52,7 @@ export function EmployeeFormModal({ isOpen, onClose, onSuccess, initialEmployee 
 
         try {
             if (initialEmployee) {
-                // Modo Edición: usar la función RPC segura para evitar problemas de permisos invisibles
+                // Modo Edición: usar la función RPC segura para actualizar perfil
                 const { error: profileError } = await supabase.rpc('update_user_profile', {
                     target_id: initialEmployee.id,
                     new_first_name: formData.first_name || '',
@@ -63,9 +63,16 @@ export function EmployeeFormModal({ isOpen, onClose, onSuccess, initialEmployee 
                 if (profileError) throw profileError;
             } else {
                 // Modo Creación: Registrar Auth y luego perfil
+                // Si el rol es 'usuario', normalmente se registrarían ellos mismos, 
+                // pero permitimos al admin crearlos si es necesario.
                 const { data: authData, error: authError } = await supabaseAdminAuth.auth.signUp({
                     email: formData.email,
                     password: formData.password,
+                    options: {
+                        data: {
+                            role: formData.role
+                        }
+                    }
                 });
 
                 if (authError) throw authError;
@@ -86,17 +93,16 @@ export function EmployeeFormModal({ isOpen, onClose, onSuccess, initialEmployee 
             }
 
             // Limpiar y cerrar
-            setFormData({ email: '', password: '', first_name: '', last_name: '', role: 'empleado' });
+            setFormData({ email: '', password: '', first_name: '', last_name: '', role: 'usuario' });
             onSuccess();
         } catch (err: any) {
-            console.error('Error registrando empleado:', err);
-            // Mensajes amigables para errores comunes de Supabase Auth
+            console.error('Error registrando usuario:', err);
             if (err.message && err.message.includes("User already registered")) {
                 setError('Ya existe un usuario con este correo electrónico.');
             } else if (err.message && err.message.includes("Password should be at least")) {
                 setError('La contraseña es muy débil (debe tener al menos 6 caracteres).');
             } else {
-                setError(err.message || 'Ocurrió un error al intentar registrar el empleado.');
+                setError(err.message || 'Ocurrió un error al intentar procesar la solicitud.');
             }
         } finally {
             setLoading(false);
@@ -111,7 +117,7 @@ export function EmployeeFormModal({ isOpen, onClose, onSuccess, initialEmployee 
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                     <div className="flex items-center gap-2 text-gray-800">
                         <UserPlus className="h-5 w-5 text-blue-600" />
-                        <h3 className="text-lg font-bold">{initialEmployee ? 'Editar Empleado' : 'Registrar Empleado'}</h3>
+                        <h3 className="text-lg font-bold">{initialEmployee ? 'Editar Usuario' : 'Registrar Nuevo'}</h3>
                     </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors">
                         <X className="h-5 w-5" />
@@ -140,7 +146,7 @@ export function EmployeeFormModal({ isOpen, onClose, onSuccess, initialEmployee 
                     <div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico <span className="text-red-500">*</span></label>
-                            <input type="email" name="email" value={formData.email} onChange={handleChange} required disabled={!!initialEmployee} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm disabled:bg-gray-100 disabled:text-gray-500" placeholder="empleado@refaccionaria.com" />
+                            <input type="email" name="email" value={formData.email} onChange={handleChange} required disabled={!!initialEmployee} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm disabled:bg-gray-100 disabled:text-gray-500" placeholder="usuario@ejemplo.com" />
                             {initialEmployee && <p className="text-xs text-gray-400 mt-1">El correo de acceso no puede ser modificado aquí.</p>}
                         </div>
 
@@ -155,8 +161,9 @@ export function EmployeeFormModal({ isOpen, onClose, onSuccess, initialEmployee 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Rol en el Sistema <span className="text-red-500">*</span></label>
                         <select name="role" value={formData.role} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm bg-white">
-                            <option value="empleado">Empleado (Solo ver, crear y editar)</option>
-                            <option value="admin">Administrador (Control total y gestión)</option>
+                            <option value="usuario">Usuario General (Cliente)</option>
+                            <option value="empleado">Empleado (Operativo)</option>
+                            <option value="admin">Administrador (Control total)</option>
                         </select>
                     </div>
 
