@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, ShoppingCart } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 import { ProductFormModal } from './ProductFormModal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -19,11 +20,12 @@ interface Product {
 
 interface ProductGridProps {
   isAuthenticated?: boolean;
-  userRole?: 'admin' | 'empleado' | null;
+  userRole?: 'admin' | 'empleado' | 'usuario' | null;
 }
 
 export function ProductGrid({ isAuthenticated = false, userRole = null }: ProductGridProps) {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
   const sortBy = searchParams.get('sort') || 'created_at-desc';
@@ -35,6 +37,8 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
   const [totalProducts, setTotalProducts] = useState(0);
 
   const ITEMS_PER_PAGE = 12;
+
+  const canManageProducts = userRole === 'admin' || userRole === 'empleado';
 
   useEffect(() => {
     setCurrentPage(1);
@@ -95,6 +99,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
         setProducts(data || []);
         if (count !== null) setTotalProducts(count);
       }
+Query: { count: 'exact' };
     } catch (err) {
       console.error('Unexpected error:', err);
     } finally {
@@ -126,7 +131,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
           </div>
         )}
 
-        {isAuthenticated && (
+        {isAuthenticated && canManageProducts && (
           <div className="flex items-center gap-4 shrink-0">
             {userRole === 'admin' && (
               <div className="flex items-center gap-2">
@@ -147,7 +152,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
             
             <button
               onClick={() => { setProductToEdit(null); setIsAddModalOpen(true); }}
-              className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+              className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-black rounded-xl text-amber-950 bg-amber-500 hover:bg-amber-600 shadow-md shadow-amber-100 transition-all active:scale-95"
             >
               <Plus className="-ml-1 mr-2 h-5 w-5" />
               Agregar <span className="hidden sm:inline">&nbsp;Producto</span>
@@ -170,7 +175,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
             <div
               key={product.id}
               onClick={() => navigate(`/producto/${product.slug || product.id}`)}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all hover:-translate-y-1 flex flex-col cursor-pointer ring-1 ring-transparent hover:ring-blue-100"
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-gray-200/50 transition-all hover:-translate-y-1 flex flex-col cursor-pointer ring-2 ring-transparent hover:ring-amber-500/10 group"
             >
               <div className="h-48 overflow-hidden bg-gray-50/80 relative flex items-center justify-center p-4 group-hover:bg-gray-100 transition-colors">
                 {product.image_url ? (
@@ -193,7 +198,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
                   <div>
                     <h3 className="font-bold text-lg text-gray-900 line-clamp-1" title={product.name}>{product.name}</h3>
                     {product.brand && (
-                      <p className="text-xs font-semibold text-blue-600 uppercase tracking-tighter">{product.brand}</p>
+                      <p className="text-xs font-black text-amber-600 uppercase tracking-tighter">{product.brand}</p>
                     )}
                   </div>
                   <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${product.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} shrink-0 ml-2 shadow-sm`}>
@@ -210,22 +215,32 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
                 <p className="text-sm text-gray-600 line-clamp-2 mt-1 flex-1">
                   {product.description || "Sin descripción."}
                 </p>
-                {isAuthenticated && (
-                  <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setProductToEdit(product); setIsAddModalOpen(true); }}
-                      className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={(e) => handleDeleteProduct(product.id, e)}
-                      className="text-sm font-bold text-red-600 hover:text-red-800 transition-colors"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                )}
+                <div className="mt-auto pt-6 flex flex-col gap-3">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); addToCart(product); }}
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-amber-950 py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-100 transition-all active:scale-95"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    Añadir al Carrito
+                  </button>
+
+                  {isAuthenticated && canManageProducts && (
+                    <div className="pt-3 border-t border-gray-50 flex justify-between">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setProductToEdit(product); setIsAddModalOpen(true); }}
+                        className="text-xs font-black text-amber-600 hover:text-amber-700 transition-colors uppercase tracking-widest"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteProduct(product.id, e); }}
+                        className="text-xs font-black text-red-600 hover:text-red-700 transition-colors uppercase tracking-widest"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}

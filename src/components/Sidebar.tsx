@@ -37,9 +37,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {[1, 2, 3, 4, 5].map((item) => (
             <div 
               key={item} 
-              className="flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded-md hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer"
+              className="flex items-center px-4 py-3 text-sm font-black text-gray-400 rounded-xl hover:bg-amber-50 hover:text-amber-700 transition-all cursor-pointer group"
             >
-              <Clock className="mr-3 w-5 h-5 text-gray-400" />
+              <Clock className="mr-3 w-5 h-5 text-gray-300 group-hover:text-amber-500 transition-colors" />
               Opción {item} (Próximamente)
             </div>
           ))}

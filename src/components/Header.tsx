@@ -1,17 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Menu, Wrench, User, LogOut, Info, Truck, MapPin, FileText, Globe, Search, ClipboardList, ShoppingCart, ShieldAlert } from 'lucide-react';
+import { Menu, User, LogOut, Info, Truck, MapPin, FileText, Search, ClipboardList, ShoppingCart, ShieldAlert } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 
 interface HeaderProps {
   onOpenSidebar: () => void;
   isAuthenticated: boolean;
-  userRole?: 'admin' | 'empleado' | null;
+  userRole?: 'admin' | 'empleado' | 'usuario' | null;
   onLoginClick: () => void;
   onLogoutClick: () => void;
+  onOpenCart: () => void;
 }
 
-export function Header({ onOpenSidebar, isAuthenticated, userRole, onLoginClick, onLogoutClick }: HeaderProps) {
+export function Header({ onOpenSidebar, isAuthenticated, userRole, onLoginClick, onLogoutClick, onOpenCart }: HeaderProps) {
+  const { totalItems } = useCart();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
@@ -69,8 +72,8 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, onLoginClick,
   return (
     <header className="relative z-20 font-sans">
       {/* Top Bar */}
-      <div className="bg-blue-800 text-blue-100 text-xs sm:text-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-amber-600 text-amber-950 text-xs sm:text-sm border-b border-amber-700/20">
+        <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12">
           <div className="flex justify-between items-center h-10">
             <div className="flex items-center space-x-6 overflow-x-auto no-scrollbar">
               <a href="#" className="flex items-center hover:text-white whitespace-nowrap transition-colors">
@@ -79,40 +82,35 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, onLoginClick,
               <a href="#" className="flex items-center hover:text-white whitespace-nowrap transition-colors hidden sm:flex">
                 <Truck className="w-4 h-4 mr-1.5" /> Seguimiento
               </a>
-              <a href="#" className="flex items-center hover:text-white whitespace-nowrap transition-colors hidden md:flex">
+              <Link to="/sucursales" className="flex items-center hover:text-white whitespace-nowrap transition-colors hidden md:flex">
                 <MapPin className="w-4 h-4 mr-1.5" /> Sucursales
-              </a>
+              </Link>
               <a href="#" className="flex items-center hover:text-white whitespace-nowrap transition-colors hidden lg:flex">
                 <FileText className="w-4 h-4 mr-1.5" /> Facturación electrónica
               </a>
             </div>
             <div className="hidden lg:flex items-center space-x-6">
-              <div className="flex items-center">
-                <Globe className="w-4 h-4 mr-1.5" /> ES
-              </div>
-              <div className="font-semibold">
-                Tipo de cambio : $ 18.58
-              </div>
+
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Bar */}
-      <div className="bg-blue-600 text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-4">
+      <div className="bg-amber-500 text-amber-950 shadow-md">
+        <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 py-3 lg:py-5">
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
 
             {/* Logo & Category Menu */}
             <div className="flex items-center justify-between w-full lg:w-auto">
-              <Link to="/" className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
-                <Wrench className="w-8 h-10 text-blue-100" />
-                <span className="font-extrabold text-2xl tracking-tight hidden sm:block">Refaccionaria</span>
+              <Link to="/" className="flex items-center space-x-4 hover:opacity-90 transition-opacity">
+                <img src="/logo.png" alt="Logo" className="h-14 sm:h-16 lg:h-20 w-auto object-contain drop-shadow-sm" />
+                <span className="font-extrabold text-3xl tracking-tighter hidden sm:block text-amber-950 uppercase"></span>
               </Link>
 
               <button
                 onClick={onOpenSidebar}
-                className="ml-4 flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-white"
+                className="ml-4 flex items-center space-x-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-950 px-4 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-amber-600"
               >
                 <Menu className="w-5 h-5" />
                 <span className="font-bold hidden md:block">Menú de categorías</span>
@@ -131,9 +129,9 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, onLoginClick,
                   }}
                   onFocus={() => { if (searchQuery.trim()) setShowDropdown(true); }}
                   placeholder="Buscar productos por número de parte o nombre"
-                  className="w-full pl-4 pr-12 py-3 rounded-md text-gray-900 placeholder-gray-400 border border-transparent focus:border-blue-300 focus:ring-2 focus:ring-blue-300 shadow-inner outline-none"
+                  className="w-full pl-4 pr-12 py-3 rounded-md text-gray-900 placeholder-gray-400 border border-transparent focus:border-amber-400 focus:ring-2 focus:ring-amber-400 shadow-inner outline-none"
                 />
-                <button type="submit" className="absolute right-0 h-full px-4 text-gray-500 hover:text-blue-600 bg-white border-l border-gray-200 rounded-r-md transition-colors">
+                <button type="submit" className="absolute right-0 h-full px-4 text-gray-400 hover:text-amber-700 bg-white border-l border-gray-100 rounded-r-md transition-colors">
                   <Search className="w-5 h-5 font-bold" />
                 </button>
               </form>
@@ -175,7 +173,7 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, onLoginClick,
                           setShowDropdown(false);
                           navigate(`/?q=${encodeURIComponent(searchQuery.trim())}`);
                         }}
-                        className="w-full p-3 bg-gray-50 text-center text-sm font-bold text-blue-600 hover:bg-gray-100 hover:text-blue-700 transition-colors border-t border-gray-100"
+                        className="w-full p-3 bg-gray-50 text-center text-sm font-bold text-amber-700 hover:bg-gray-100 hover:text-amber-800 transition-colors border-t border-gray-100"
                       >
                         Mostrar todos los resultados para "{searchQuery}"
                       </button>
@@ -194,35 +192,46 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, onLoginClick,
 
               {isAuthenticated && userRole === 'admin' && (
                 <a href="#/dashboard" className="flex flex-col items-center group relative mt-1">
-                  <ShieldAlert className="w-6 h-6 mb-1 text-blue-100 group-hover:text-yellow-400 transition-colors" />
-                  <span className="text-xs font-semibold text-blue-100 group-hover:text-yellow-400 transition-colors">Admin</span>
+                  <ShieldAlert className="w-6 h-6 mb-1 text-amber-950/70 group-hover:text-amber-950 transition-colors" />
+                  <span className="text-xs font-semibold text-amber-950/70 group-hover:text-amber-950 transition-colors">Admin</span>
                 </a>
               )}
 
               {isAuthenticated ? (
-                <button onClick={onLogoutClick} className="flex flex-col items-center group relative mt-1">
-                  <LogOut className="w-6 h-6 mb-1 text-blue-100 group-hover:text-white transition-colors" />
-                  <span className="text-xs font-semibold text-blue-100 group-hover:text-white transition-colors">Salir</span>
-                </button>
+                <div className="flex items-center space-x-6 lg:space-x-8">
+                  <Link to="/perfil" className="flex flex-col items-center group relative mt-1">
+                    <User className="w-6 h-6 mb-1 text-amber-950/70 group-hover:text-amber-950 transition-colors" />
+                    <span className="text-xs font-semibold text-amber-950/70 group-hover:text-amber-950 transition-colors">Mi Perfil</span>
+                  </Link>
+
+                  <button onClick={onLogoutClick} className="flex flex-col items-center group relative mt-1">
+                    <LogOut className="w-6 h-6 mb-1 text-amber-950/70 group-hover:text-amber-950 transition-colors" />
+                    <span className="text-xs font-semibold text-amber-950/70 group-hover:text-amber-950 transition-colors">Salir</span>
+                  </button>
+                </div>
               ) : (
                 <button onClick={onLoginClick} className="flex flex-col items-center group relative mt-1">
-                  <User className="w-6 h-6 mb-1 text-blue-100 group-hover:text-white transition-colors" />
-                  <span className="text-xs font-semibold text-blue-100 group-hover:text-white transition-colors">Iniciar sesión</span>
+                  <User className="w-6 h-6 mb-1 text-amber-950/70 group-hover:text-amber-950 transition-colors" />
+                  <span className="text-xs font-semibold text-amber-950/70 group-hover:text-amber-950 transition-colors">Iniciar sesión</span>
                 </button>
               )}
 
-              <button className="flex flex-col items-center group mt-1">
-                <ClipboardList className="w-6 h-6 mb-1 text-blue-100 group-hover:text-white transition-colors" />
-                <span className="text-xs font-semibold text-blue-100 group-hover:text-white transition-colors">Cotizador</span>
-              </button>
+              <Link to="/cotizador" className="flex flex-col items-center group mt-1">
+                <ClipboardList className="w-6 h-6 mb-1 text-amber-950/70 group-hover:text-amber-950 transition-colors" />
+                <span className="text-xs font-semibold text-amber-950/70 group-hover:text-amber-950 transition-colors">Cotizador</span>
+              </Link>
 
-              <button className="flex flex-col items-center group relative mt-1">
-                <ShoppingCart className="w-6 h-6 mb-1 text-blue-100 group-hover:text-white transition-colors" />
-                <span className="text-xs font-semibold text-blue-100 group-hover:text-white transition-colors">Mi Carrito</span>
-                {/* Bagde de carrito de ejemplo */}
-                <span className="absolute -top-1 right-2 lg:-right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                  0
-                </span>
+              <button 
+                onClick={onOpenCart}
+                className="flex flex-col items-center group relative mt-1"
+              >
+                <ShoppingCart className="w-6 h-6 mb-1 text-amber-950/70 group-hover:text-amber-950 transition-colors" />
+                <span className="text-xs font-semibold text-amber-950/70 group-hover:text-amber-950 transition-colors">Mi Carrito</span>
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 right-2 lg:-right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ring-2 ring-amber-500">
+                    {totalItems}
+                  </span>
+                )}
               </button>
             </div>
 
