@@ -80,8 +80,8 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
     <header className="relative z-20 font-sans">
       {/* Top Bar */}
       <div className="bg-[#fdc401] text-amber-950 text-xs sm:text-sm border-b border-black/5">
-        <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12">
-          <div className="flex justify-between items-center h-10">
+        <div className="px-4 sm:px-6 lg:px-10">
+          <div className="flex justify-between items-center h-9 font-bold">
             <div className="flex items-center space-x-6 overflow-x-auto no-scrollbar">
               <Link to="/ayuda-contacto" className="flex items-center hover:text-white whitespace-nowrap transition-colors">
                 <Info className="w-4 h-4 mr-1.5" /> Ayuda y Contacto
@@ -98,7 +98,7 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
       </div>
 
       {/* Main Bar */}
-      <div className="bg-[#fdc401] text-amber-950 shadow-md">
+      <div className="bg-white text-gray-900 shadow-sm border-b border-gray-100">
         <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 py-3 lg:py-5">
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
 
@@ -106,12 +106,12 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
             <div className="flex items-center justify-between w-full lg:w-auto">
               <Link to="/" className="flex items-center space-x-4 hover:opacity-90 transition-opacity">
                 <img src="/logo.png" alt="Logo" className="h-14 sm:h-16 lg:h-20 w-auto object-contain drop-shadow-sm" />
-                <span className="font-extrabold text-3xl tracking-tighter hidden sm:block text-amber-950 uppercase"></span>
+                <span className="font-extrabold text-3xl tracking-tighter hidden sm:block text-gray-900 uppercase"></span>
               </Link>
 
               <button
                 onClick={onOpenSidebar}
-                className="ml-4 flex items-center space-x-2 bg-black/10 hover:bg-black/20 text-amber-950 px-4 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-black"
+                className="ml-4 flex items-center space-x-2 bg-[#fdc401] hover:bg-[#eeb801] text-black px-4 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#fdc401] shadow-sm"
               >
                 <Menu className="w-5 h-5" />
                 <span className="font-bold hidden md:block">Menú de categorías</span>
@@ -130,9 +130,9 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
                   }}
                   onFocus={() => { if (searchQuery.trim()) setShowDropdown(true); }}
                   placeholder="Buscar productos por número de parte o nombre"
-                  className="w-full pl-4 pr-12 py-3 rounded-md text-gray-900 placeholder-gray-400 border border-transparent focus:border-amber-400 focus:ring-2 focus:ring-amber-400 shadow-inner outline-none"
+                  className="w-full pl-4 pr-12 py-3 rounded-md text-gray-900 placeholder-gray-400 border border-gray-200 focus:border-[#fdc401] focus:ring-1 focus:ring-[#fdc401] shadow-sm outline-none transition-all"
                 />
-                <button type="submit" className="absolute right-0 h-full px-4 text-gray-400 hover:text-amber-700 bg-white border-l border-gray-100 rounded-r-md transition-colors">
+                <button type="submit" className="absolute right-0 h-full px-4 text-gray-400 hover:text-[#fdc401] bg-gray-50 border-l border-gray-200 rounded-r-md transition-colors">
                   <Search className="w-5 h-5 font-bold" />
                 </button>
               </form>
@@ -193,18 +193,18 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
 
               {isAuthenticated ? (
                 <div className="relative mt-1" ref={userMenuRef}>
-                  <button 
+                  <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-3 bg-black/5 hover:bg-black/10 px-4 py-2 rounded-xl transition-all border border-black/5 group"
+                    className="flex items-center space-x-3 bg-gray-50 hover:bg-gray-100 px-4 py-2 rounded-xl transition-all border border-gray-200 group"
                   >
-                    <div className="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center border border-black/5 group-hover:bg-black/20 transition-colors">
-                      <User className="w-5 h-5 text-amber-950" />
+                    <div className="w-8 h-8 bg-[#fdc401]/20 rounded-full flex items-center justify-center border border-[#fdc401]/30 group-hover:bg-[#fdc401]/30 transition-colors">
+                      <User className="w-5 h-5 text-gray-900" />
                     </div>
                     <div className="text-left hidden sm:block">
-                      <p className="text-xs font-black text-amber-950 truncate max-w-[120px]">
+                      <p className="text-xs font-black text-gray-900 truncate max-w-[120px]">
                         {userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : (email || 'Usuario')}
                       </p>
-                      <p className="text-[10px] font-bold text-amber-900/60 leading-none">Mi Cuenta</p>
+                      <p className="text-[10px] font-bold text-gray-500 leading-none">Mi Cuenta</p>
                     </div>
                   </button>
 
@@ -216,8 +216,8 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
                         <p className="text-sm font-bold text-gray-900 truncate">{email}</p>
                       </div>
                       <div className="p-2">
-                        <Link 
-                          to="/perfil" 
+                        <Link
+                          to="/perfil"
                           onClick={() => setShowUserMenu(false)}
                           className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-gray-700 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-all"
                         >
@@ -225,8 +225,8 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
                           Ver Perfil
                         </Link>
                         {(userRole === 'admin' || userRole === 'empleado') && (
-                          <Link 
-                            to="/dashboard" 
+                          <Link
+                            to="/dashboard"
                             onClick={() => setShowUserMenu(false)}
                             className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-gray-700 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-all"
                           >
@@ -234,7 +234,7 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
                             {userRole === 'admin' ? 'Panel Admin' : 'Panel Empleado'}
                           </Link>
                         )}
-                        <button 
+                        <button
                           onClick={() => {
                             setShowUserMenu(false);
                             onLogoutClick();
@@ -250,24 +250,24 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
                 </div>
               ) : (
                 <button onClick={onLoginClick} className="flex flex-col items-center group relative mt-1">
-                  <User className="w-6 h-6 mb-1 text-amber-950/70 group-hover:text-amber-950 transition-colors" />
-                  <span className="text-xs font-semibold text-amber-950/70 group-hover:text-amber-950 transition-colors">Iniciar sesión</span>
+                  <User className="w-6 h-6 mb-1 text-black group-hover:text-[#fdc401] transition-colors" />
+                  <span className="text-xs font-semibold text-gray-500 group-hover:text-gray-900 transition-colors">Iniciar sesión</span>
                 </button>
               )}
 
               <Link to="/cotizador" className="flex flex-col items-center group mt-1">
-                <ClipboardList className="w-6 h-6 mb-1 text-amber-950/70 group-hover:text-amber-950 transition-colors" />
-                <span className="text-xs font-semibold text-amber-950/70 group-hover:text-amber-950 transition-colors">Cotizador</span>
+                <ClipboardList className="w-6 h-6 mb-1 text-black group-hover:text-[#fdc401] transition-colors" />
+                <span className="text-xs font-semibold text-gray-500 group-hover:text-gray-900 transition-colors">Cotizador</span>
               </Link>
 
-              <button 
+              <button
                 onClick={onOpenCart}
                 className="flex flex-col items-center group relative mt-1"
               >
-                <ShoppingCart className="w-6 h-6 mb-1 text-amber-950/70 group-hover:text-amber-950 transition-colors" />
-                <span className="text-xs font-semibold text-amber-950/70 group-hover:text-amber-950 transition-colors">Mi Carrito</span>
+                <ShoppingCart className="w-6 h-6 mb-1 text-black group-hover:text-[#fdc401] transition-colors" />
+                <span className="text-xs font-semibold text-gray-500 group-hover:text-gray-900 transition-colors">Mi Carrito</span>
                 {totalItems > 0 && (
-                  <span className="absolute -top-1 right-2 lg:-right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ring-2 ring-amber-500">
+                  <span className="absolute -top-1 right-2 lg:-right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ring-2 ring-white">
                     {totalItems}
                   </span>
                 )}

@@ -358,7 +358,7 @@ export function UserProfileView() {
     }
 
     return (
-        <div className="max-w-[1700px] mx-auto py-10 px-6 lg:px-12">
+        <div className="max-w-[1440px] mx-auto py-10 px-6 lg:px-12">
             <div className="flex flex-col md:flex-row items-start md:gap-x-20 lg:gap-x-32">
 
                 {/* Sidebar */}

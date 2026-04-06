@@ -28,7 +28,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
   const { addToCart } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
-  const sortBy = searchParams.get('sort') || 'created_at-desc';
+  const sortBy = searchParams.get('sort') || 'stock-desc';
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -99,7 +99,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
         setProducts(data || []);
         if (count !== null) setTotalProducts(count);
       }
-Query: { count: 'exact' };
+      Query: { count: 'exact' };
     } catch (err) {
       console.error('Unexpected error:', err);
     } finally {
@@ -131,37 +131,32 @@ Query: { count: 'exact' };
             </button>
           </div>
         ) : (
-          <div>
-            <h2 className="text-2xl font-black text-gray-900 tracking-tighter">Catálogo General</h2>
-            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1 italic">Mostrando {totalProducts} productos</p>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {isAuthenticated && canManageProducts && (
+              <button
+                onClick={() => { setProductToEdit(null); setIsAddModalOpen(true); }}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-black rounded-2xl text-black bg-[#fdc401] hover:bg-[#cc9e01] shadow-xl shadow-[#fdc401]/10 transition-all active:scale-95"
+              >
+                <Plus className="-ml-1 mr-2 h-5 w-5" />
+                Nuevo Producto
+              </button>
+            )}
+
+            <div className="flex items-center gap-2 flex-1 sm:flex-none">
+              <select
+                value={sortBy}
+                onChange={(e) => handleSortChange(e.target.value)}
+                className="w-full sm:w-auto px-4 py-3 border border-gray-100 rounded-2xl text-xs font-black bg-white focus:ring-4 focus:ring-amber-500/10 outline-none shadow-sm cursor-pointer appearance-none text-gray-600 hover:border-amber-200 transition-all uppercase tracking-widest"
+              >
+                <option value="created_at-desc">Recientes</option>
+                <option value="stock-desc">Stock (Max)</option>
+                <option value="stock-asc">Stock (Min)</option>
+                <option value="name-asc">A-Z</option>
+                <option value="name-desc">Z-A</option>
+              </select>
+            </div>
           </div>
         )}
-
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          {isAuthenticated && canManageProducts && (
-            <button
-              onClick={() => { setProductToEdit(null); setIsAddModalOpen(true); }}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-black rounded-2xl text-black bg-[#fdc401] hover:bg-[#cc9e01] shadow-xl shadow-[#fdc401]/10 transition-all active:scale-95"
-            >
-              <Plus className="-ml-1 mr-2 h-5 w-5" />
-              Nuevo Producto
-            </button>
-          )}
-          
-          <div className="flex items-center gap-2 flex-1 sm:flex-none">
-            <select
-              value={sortBy}
-              onChange={(e) => handleSortChange(e.target.value)}
-              className="w-full sm:w-auto px-4 py-3 border border-gray-100 rounded-2xl text-xs font-black bg-white focus:ring-4 focus:ring-amber-500/10 outline-none shadow-sm cursor-pointer appearance-none text-gray-600 hover:border-amber-200 transition-all uppercase tracking-widest"
-            >
-              <option value="created_at-desc">Recientes</option>
-              <option value="stock-desc">Stock (Max)</option>
-              <option value="stock-asc">Stock (Min)</option>
-              <option value="name-asc">A-Z</option>
-              <option value="name-desc">Z-A</option>
-            </select>
-          </div>
-        </div>
       </div>
 
       {loading ? (
@@ -177,9 +172,9 @@ Query: { count: 'exact' };
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product) => (
-            <ProductSmallCard 
-              key={product.id} 
-              product={product} 
+            <ProductSmallCard
+              key={product.id}
+              product={product}
               onAddToCart={addToCart}
               onNavigate={() => navigate(`/producto/${product.slug || product.id}`)}
               onEdit={() => { setProductToEdit(product); setIsAddModalOpen(true); }}
@@ -241,26 +236,26 @@ function ProductSmallCard({ product, onAddToCart, onNavigate, onEdit, onDelete, 
   };
 
   return (
-    <div 
+    <div
       onClick={onNavigate}
-      className="bg-white rounded-[1.5rem] border border-gray-100/80 shadow-sm hover:shadow-2xl hover:shadow-gray-300/40 transition-all duration-300 group flex flex-col cursor-pointer overflow-hidden p-1.5"
+      className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-xl hover:shadow-gray-200/40 transition-all duration-300 group flex flex-col cursor-pointer overflow-hidden h-full"
     >
-      <div className="flex p-4 gap-4 min-h-[170px] relative">
-        {/* Branding overlay top right */}
+      <div className="flex p-4 gap-4 relative">
+        {/* Branding top right */}
         {product.brand && (
-          <div className="absolute top-2 right-4 z-10">
-            <p className="text-[11px] font-black text-gray-400 tracking-tighter opacity-70">
+          <div className="absolute top-4 right-4 z-10">
+            <p className="text-[10px] font-black text-gray-950 tracking-tighter uppercase">
               {product.brand}
             </p>
           </div>
         )}
 
-        {/* Image side */}
-        <div className="w-2/5 min-w-[120px] flex items-center justify-center bg-gray-50/50 rounded-2xl overflow-hidden p-3 group-hover:bg-white transition-colors">
+        {/* Image side - Left */}
+        <div className="w-2/5 min-w-[120px] h-32 flex items-center justify-center bg-gray-50/50 rounded-xl overflow-hidden p-2 group-hover:bg-white transition-colors">
           {product.image_url ? (
-            <img 
-              src={product.image_url} 
-              alt={product.name} 
+            <img
+              src={product.image_url}
+              alt={product.name}
               className="max-w-full max-h-full object-contain transition-transform duration-700 group-hover:scale-110"
             />
           ) : (
@@ -268,78 +263,74 @@ function ProductSmallCard({ product, onAddToCart, onNavigate, onEdit, onDelete, 
           )}
         </div>
 
-        {/* Data side */}
-        <div className="flex-1 flex flex-col pt-4">
+        {/* Data side - Right */}
+        <div className="flex-1 flex flex-col pt-1">
           {product.sku && (
-            <p className="text-xs font-black text-[#fdc401] uppercase tracking-tight mb-1" title={product.sku}>
+            <p className="text-xs font-black text-[#fdc401] uppercase tracking-tight mb-0.5" title={product.sku}>
               {product.sku}
             </p>
           )}
-          <h3 className="text-sm lg:text-base font-bold text-gray-900 leading-tight line-clamp-3 pr-6 mb-2">
+          <h3 className="text-sm lg:text-base font-bold text-gray-900 leading-tight line-clamp-2 pr-12 mb-1">
             {product.name}
           </h3>
 
-          <div className="flex items-center gap-2 mb-4">
-            <span className={`px-3 py-1 text-sm font-black rounded-lg border uppercase tracking-tighter shadow-md ${
-              product.stock > 0 
-                ? 'bg-green-100 text-green-700 border-green-200' 
-                : 'bg-red-100 text-red-700 border-red-200'
-            }`}>
+          <div className="flex items-center gap-2 mb-2">
+            <span className={`px-2 py-0.5 text-[10px] font-black rounded-md border uppercase tracking-tighter shadow-sm ${product.stock > 0
+              ? 'bg-green-50 text-green-700 border-green-200/30'
+              : 'bg-red-50 text-red-700 border-red-200/30'
+              }`}>
               {product.stock > 0 ? `Stock: ${product.stock}` : 'Agotado'}
             </span>
           </div>
 
-          <div className="mt-auto flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <p className="text-[10px] font-bold text-gray-400 uppercase italic">Cantidad</p>
-              <div className="flex items-center border border-gray-100 rounded-lg overflow-hidden bg-gray-50/50 h-8">
-                <button 
+          <div className="mt-auto flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1">
+              <p className="text-[10px] font-bold text-gray-400">Cantidad</p>
+              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50/50 h-8 w-fit">
+                <button
                   onClick={decrement}
-                  className="px-2 h-full hover:bg-gray-100 text-gray-500 transition-colors"
+                  className="px-3 h-full hover:bg-gray-100 text-gray-500 transition-colors text-xs"
                 >
                   -
                 </button>
-                <div className="w-8 h-full flex items-center justify-center text-xs font-black text-gray-700 bg-white border-x border-gray-100">
+                <div className="w-10 h-full flex items-center justify-center text-sm font-black text-gray-900 bg-white border-x border-gray-200">
                   {qty}
                 </div>
-                <button 
+                <button
                   onClick={increment}
-                  className="px-2 h-full hover:bg-gray-100 text-gray-500 transition-colors"
+                  className="px-3 h-full hover:bg-gray-100 text-amber-500 transition-colors text-xs"
                 >
                   +
                 </button>
               </div>
             </div>
+
+            {canManage && (
+              <div className="flex items-center gap-4 mt-1">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                  className="text-[9px] font-black text-amber-700 hover:underline uppercase tracking-widest"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDelete(e); }}
+                  className="text-[9px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest"
+                >
+                  Eliminar
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Footer Actions */}
-      <div className="px-1 pb-1 flex flex-col gap-1">
-        <button
-          onClick={(e) => { e.stopPropagation(); onAddToCart(product, qty); }}
-          className="w-full bg-[#fdc401] hover:bg-amber-400 text-black py-2.5 rounded-xl font-black text-xs transition-all active:scale-95 shadow-sm uppercase tracking-widest"
-        >
-          Agregar al carrito
-        </button>
-
-        {canManage && (
-          <div className="flex items-center justify-between px-3 py-1 mb-1">
-            <button 
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="text-[9px] font-black text-amber-700 hover:underline uppercase tracking-widest"
-            >
-              Editar
-            </button>
-            <button 
-              onClick={(e) => { e.stopPropagation(); onDelete(e); }}
-              className="text-[9px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest"
-            >
-              Eliminar
-            </button>
-          </div>
-        )}
-      </div>
+      <button
+        onClick={(e) => { e.stopPropagation(); onAddToCart(product, qty); }}
+        className="w-full bg-[#fdc401] hover:bg-amber-400 text-black py-3.5 font-black text-xs transition-all active:scale-95 shadow-inner uppercase tracking-widest border-t border-gray-100 mt-auto"
+      >
+        Agregar al carrito
+      </button>
     </div>
   );
 }

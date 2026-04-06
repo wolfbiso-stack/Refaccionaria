@@ -1,10 +1,9 @@
-import { Mail, MapPin, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function Footer() {
   return (
     <footer className="bg-white border-t border-gray-200 pt-10 pb-6 mt-auto">
-      <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Column 1 */}
           <div>
@@ -26,23 +25,13 @@ export function Footer() {
 
           {/* Column 3 */}
           <div>
-            <h3 className="text-[#fdc401] font-bold mb-4 text-lg uppercase tracking-wider">Ayuda / Contacto</h3>
+            <h3 className="text-[#fdc401] font-bold mb-4 text-lg uppercase tracking-wider">Contacto</h3>
             <ul className="space-y-3">
-              <li className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-4 mb-2 flex items-center">
-                <MapPin className="w-3 h-3 mr-2" /> Dirección
+              <li>
+                <Link to="/ayuda-contacto" className="font-bold text-gray-800 hover:text-[#fdc401] transition-colors text-sm">
+                  Ayuda y Contacto
+                </Link>
               </li>
-              <li className="text-sm font-bold text-gray-700 leading-snug">
-                C. Altamirano, Zapotal <br />
-                96039 Acayucan, Veracruz.
-              </li>
-              <li className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-4 mb-2 flex items-center">
-                <Phone className="w-3 h-3 mr-2" /> Atención
-              </li>
-              <li className="text-sm font-bold text-[#fdc401]">924 688 6220</li>
-              <li className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-4 mb-2 flex items-center">
-                <Mail className="w-3 h-3 mr-2" /> Email
-              </li>
-              <li className="text-sm font-bold text-gray-500 lowercase underline decoration-gray-200">ventas@refaccionariacordobesa.com</li>
             </ul>
           </div>
 

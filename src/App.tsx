@@ -85,7 +85,7 @@ function App() {
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
-        <main className="flex-1 w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 py-8">
+        <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-8">
           <Routes>
             <Route path="/" element={
               <>
