@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useCart } from '../context/CartContext';
-import { ArrowLeft, Box, AlertTriangle, Trash2, ChevronLeft, ChevronRight, ShieldAlert, Minus, Plus } from 'lucide-react';
+import { ArrowLeft, Box, AlertTriangle, Trash2, ChevronLeft, ChevronRight, ShieldAlert, Minus, Plus, Heart } from 'lucide-react';
 import { ProductFormModal } from './ProductFormModal';
 import { useParams, useNavigate } from 'react-router-dom';
 
 interface ProductDetailProps {
   isAuthenticated?: boolean;
   userRole?: 'admin' | 'empleado' | 'usuario' | null;
+  userId?: string;
+  onRequireLogin?: () => void;
 }
 
 interface Product {
@@ -28,7 +30,7 @@ interface Product {
   editorEmail?: string;
 }
 
-export function ProductDetail({ isAuthenticated = false, userRole = null }: ProductDetailProps) {
+export function ProductDetail({ isAuthenticated = false, userRole = null, userId, onRequireLogin }: ProductDetailProps) {
   const { id: slugOrId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -39,6 +41,44 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    if (product?.id && isAuthenticated && userId) {
+      supabase.from('user_favorites')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('product_id', product.id)
+        .then(({data, error}) => {
+          if (!error && data && data.length > 0) setIsFavorite(true);
+          else setIsFavorite(false);
+        });
+    } else {
+      setIsFavorite(false);
+    }
+  }, [product?.id, isAuthenticated, userId]);
+
+  const toggleFavorite = async () => {
+    if (!isAuthenticated || !userId) {
+      if (onRequireLogin) onRequireLogin();
+      return;
+    }
+    if (!product) return;
+
+    const currentlyFavorite = isFavorite;
+    setIsFavorite(!currentlyFavorite); // Optimistic
+
+    try {
+      if (currentlyFavorite) {
+        await supabase.from('user_favorites').delete().eq('user_id', userId).eq('product_id', product.id);
+      } else {
+        await supabase.from('user_favorites').insert({ user_id: userId, product_id: product.id });
+      }
+    } catch (err) {
+      console.error(err);
+      setIsFavorite(currentlyFavorite); // Revert
+    }
+  };
 
   const canManageProducts = userRole === 'admin' || userRole === 'empleado';
 
@@ -149,7 +189,7 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
       {/* Barra de Navegación Superior */}
       <button
         onClick={() => navigate(-1)}
-        className="group inline-flex items-center text-xs font-bold text-gray-400 hover:text-amber-700 transition-all uppercase tracking-widest"
+        className="group inline-flex items-center text-sm font-bold text-gray-400 hover:text-amber-700 transition-all tracking-wide"
       >
         <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-100 mr-3 group-hover:border-amber-200 group-hover:bg-amber-50 transition-all">
           <ArrowLeft className="h-4 w-4" />
@@ -251,42 +291,59 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
                 </p>
               </div>
 
-              {/* Selector de Cantidad */}
-              <div className="mb-6">
-                <label className="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest">Cantidad</label>
-                <div className="flex items-center w-24 h-8 border border-gray-100 rounded-lg overflow-hidden bg-white shadow-sm">
-                  <button 
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="flex-1 h-full flex items-center justify-center text-gray-300 hover:bg-gray-50 transition-colors border-r border-gray-50"
-                  >
-                    <Minus className="w-3 h-3" />
-                  </button>
-                  <div className="flex-[1.2] h-full flex items-center justify-center font-bold text-gray-600 text-xs">
-                    {quantity}
+              {/* Sector de Compra (Cantidad y Carrito) */}
+              <div className="mb-4 flex flex-wrap items-end gap-3 sm:gap-4">
+                
+                {/* Cantidad */}
+                <div>
+                  <label className="block text-xs font-black text-gray-400 mb-2 tracking-wide">Cantidad</label>
+                  <div className="flex items-center w-28 h-12 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm shadow-gray-100">
+                    <button 
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="flex-[1] h-full flex items-center justify-center text-gray-400 hover:bg-gray-50 transition-colors border-r border-gray-100"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="flex-[1.2] h-full flex items-center justify-center font-black text-gray-800 text-[14px]">
+                      {quantity}
+                    </div>
+                    <button 
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="flex-[1] h-full flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors border-l border-gray-100"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <button 
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="flex-1 h-full flex items-center justify-center text-[#fdc401] hover:bg-gray-50 transition-colors border-l border-gray-50"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
                 </div>
-              </div>
-            </div>
 
-            {/* Panel de Acción */}
-            <div className="space-y-6">
-              <div className="flex flex-col gap-5">
+                {/* Agregar al carrito */}
                 <button 
                   onClick={() => addToCart(product, quantity)}
-                  className="w-fit flex items-center justify-center gap-3 bg-[#fdc401] hover:bg-[#cc9e01] text-black px-10 py-3 rounded-xl font-black text-sm shadow-lg shadow-[#fdc401]/10 transition-all active:scale-95 group"
+                  className="flex-1 min-w-[200px] h-12 flex items-center justify-center gap-3 bg-[#fdc401] hover:bg-[#edb801] text-black px-8 rounded-xl font-bold text-sm tracking-wide shadow-sm transition-all active:scale-95 whitespace-nowrap"
                 >
                   Agregar al carrito
                 </button>
+              </div>
+
+              {/* Agregar a Favoritos */}
+              <div className="mb-8">
+                <button
+                  onClick={toggleFavorite}
+                  className={`flex items-center group gap-2 font-bold text-xs tracking-wide transition-colors ${isFavorite ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  <Heart className={`w-4 h-4 transition-colors ${isFavorite ? 'text-red-500' : 'text-gray-300 group-hover:text-red-400'}`} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={2.5}/>
+                  Agregar a favoritos
+                </button>
+              </div>
+            </div>
+
+            {/* Panel Secundario (Compartir) */}
+            <div className="space-y-6">
+              <div className="flex flex-col gap-5">
                 
                 <div className="flex items-center justify-between gap-8">
                   <div className="flex items-center gap-4">
-                    <span className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Comparte</span>
+                    <span className="text-xs font-bold text-gray-400 tracking-wide">Comparte</span>
                     <div className="flex items-center gap-2">
                        <a 
                          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
@@ -325,16 +382,16 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
                       href={`https://wa.me/529246886220?text=${encodeURIComponent(`Hola, necesito ayuda respecto al artículo "${product.name}"`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs font-black text-[#25d366] hover:underline uppercase tracking-widest"
+                      className="text-sm font-bold text-[#25d366] hover:underline tracking-wide"
                     >
-                      Contactanos
+                      Contáctanos
                     </a>
                   </div>
                 </div>
               </div>
 
               {/* Disponibilidad (Más grande por solicitud) */}
-              <div className="pt-4 flex items-center gap-3 text-xs lg:text-sm font-black text-gray-800 uppercase tracking-widest border-t border-gray-100">
+              <div className="pt-4 flex items-center gap-3 text-sm font-bold text-gray-800 tracking-wide border-t border-gray-100">
                 <div className={`h-2.5 w-2.5 rounded-full shadow-sm ${product.stock > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
                 <span>{product.stock} unidades disponibles</span>
               </div>
@@ -344,13 +401,13 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={() => setIsEditModalOpen(true)}
-                      className="flex items-center justify-center px-4 py-2.5 border border-amber-200 text-[10px] font-black rounded-xl text-amber-900 bg-white hover:bg-amber-50 transition-all uppercase tracking-widest"
+                      className="flex items-center justify-center px-4 py-2.5 border border-amber-200 text-xs font-bold rounded-xl text-amber-900 bg-white hover:bg-amber-50 transition-all tracking-wide"
                     >
                       Editar Producto
                     </button>
                     <button
                       onClick={handleDelete}
-                      className="flex items-center justify-center px-4 py-2.5 border border-red-100 text-[10px] font-black rounded-xl text-red-600 bg-white hover:bg-red-50 transition-all uppercase tracking-widest"
+                      className="flex items-center justify-center px-4 py-2.5 border border-red-100 text-xs font-bold rounded-xl text-red-600 bg-white hover:bg-red-50 transition-all tracking-wide"
                     >
                       <Trash2 className="h-3.5 w-3.5 mr-2" />
                       Eliminar
@@ -363,18 +420,18 @@ export function ProductDetail({ isAuthenticated = false, userRole = null }: Prod
             {/* Auditoría (Solo Admin) */}
             {userRole === 'admin' && (
               <div className="mt-8 bg-gray-900 p-6 rounded-2xl text-white shadow-xl">
-                <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 flex items-center text-amber-500">
+                <h4 className="text-sm font-bold tracking-wide mb-4 flex items-center text-amber-500">
                   <ShieldAlert className="h-4 w-4 mr-2" />
-                  Admin
+                  Panel Administrador
                 </h4>
-                <div className="space-y-2 text-[10px] font-mono opacity-80">
+                <div className="space-y-2 text-xs font-mono opacity-80">
                   <p className="flex justify-between">
-                    <span>CREADOR:</span>
-                    <span className="text-amber-200">{product.creatorEmail || 'SISTEMA'}</span>
+                    <span>Creador:</span>
+                    <span className="text-amber-200">{product.creatorEmail || 'Sistema'}</span>
                   </p>
                   <p className="flex justify-between">
-                    <span>ULTIMA_MOD:</span>
-                    <span className="text-amber-200">{product.editorEmail || 'ORIGINAL'}</span>
+                    <span>Última mod:</span>
+                    <span className="text-amber-200">{product.editorEmail || 'Original'}</span>
                   </p>
                 </div>
               </div>

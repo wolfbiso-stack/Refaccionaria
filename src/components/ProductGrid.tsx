@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Plus, ShoppingCart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, ShoppingCart, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 import { ProductFormModal } from './ProductFormModal';
@@ -18,12 +18,16 @@ interface Product {
   images?: string[];
 }
 
+import { ProductSmallCard } from './ProductSmallCard';
+
 interface ProductGridProps {
   isAuthenticated?: boolean;
   userRole?: 'admin' | 'empleado' | 'usuario' | null;
+  userId?: string;
+  onRequireLogin?: () => void;
 }
 
-export function ProductGrid({ isAuthenticated = false, userRole = null }: ProductGridProps) {
+export function ProductGrid({ isAuthenticated = false, userRole = null, userId, onRequireLogin }: ProductGridProps) {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,6 +39,54 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+
+  const fetchFavorites = useCallback(async () => {
+    if (!isAuthenticated || !userId) {
+      setFavoriteIds(new Set());
+      return;
+    }
+    try {
+      const { data, error } = await supabase.from('user_favorites').select('product_id').eq('user_id', userId);
+      if (!error && data) {
+        setFavoriteIds(new Set(data.map(f => f.product_id)));
+      }
+    } catch (err) {
+      console.error('Error fetching favorites:', err);
+    }
+  }, [isAuthenticated, userId]);
+
+  useEffect(() => {
+    fetchFavorites();
+  }, [fetchFavorites]);
+
+  const toggleFavorite = async (productId: string) => {
+    if (!isAuthenticated || !userId) {
+      if (onRequireLogin) onRequireLogin();
+      return;
+    }
+
+    const isFav = favoriteIds.has(productId);
+    
+    // Optimistic UI update
+    setFavoriteIds(prev => {
+      const newSet = new Set(prev);
+      if (isFav) newSet.delete(productId);
+      else newSet.add(productId);
+      return newSet;
+    });
+
+    try {
+      if (isFav) {
+        await supabase.from('user_favorites').delete().eq('user_id', userId).eq('product_id', productId);
+      } else {
+        await supabase.from('user_favorites').insert({ user_id: userId, product_id: productId });
+      }
+    } catch (err) {
+      console.error('Error toggling favorite', err);
+      fetchFavorites(); // Revert on failure
+    }
+  };
 
   const ITEMS_PER_PAGE = 12;
 
@@ -170,11 +222,13 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
           <p className="text-gray-400 font-bold italic">No se encontraron productos en esta sección.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           {products.map((product) => (
             <ProductSmallCard
               key={product.id}
               product={product}
+              isFavorite={favoriteIds.has(product.id)}
+              onToggleFavorite={() => toggleFavorite(product.id)}
               onAddToCart={addToCart}
               onNavigate={() => navigate(`/producto/${product.slug || product.id}`)}
               onEdit={() => { setProductToEdit(product); setIsAddModalOpen(true); }}
@@ -217,118 +271,6 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
         onSuccess={fetchProducts}
         initialProduct={productToEdit}
       />
-    </div>
-  );
-}
-
-// Componente Interno para la nueva tarjeta vertical basada en el diseño proporcionado
-function ProductSmallCard({ product, onAddToCart, onNavigate, onEdit, onDelete, canManage }: any) {
-  const [qty, setQty] = useState(1);
-
-  const increment = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setQty(prev => prev + 1);
-  };
-
-  const decrement = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (qty > 1) setQty(prev => prev - 1);
-  };
-
-  return (
-    <div
-      onClick={onNavigate}
-      className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-gray-200 transition-all duration-300 group flex flex-col cursor-pointer overflow-hidden h-full"
-    >
-      {/* Top section: Image and SKU */}
-      <div className="relative h-40 sm:h-44 p-4 flex items-center justify-center bg-white w-full">
-        {/* SKU top right */}
-        {product.sku && (
-          <div className="absolute top-4 right-4 z-10">
-            <p className="text-[11px] sm:text-[12px] font-black text-[#F26522] uppercase tracking-tighter">
-              {product.sku}
-            </p>
-          </div>
-        )}
-
-        {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.name}
-            className="max-w-full max-h-full object-contain transition-transform duration-700 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex flex-col items-center justify-center text-gray-300 h-full w-full bg-gray-50/50 rounded-lg">
-             <span className="text-xs font-medium">Sin imagen</span>
-          </div>
-        )}
-      </div>
-
-      {/* Info section */}
-      <div className="px-4 pb-1 flex flex-col flex-1">
-        <h3 className="text-[13px] sm:text-[14px] font-black text-gray-900 leading-snug line-clamp-2 min-h-[40px] capitalize tracking-wide">
-          {product.name?.toLowerCase() || ''}
-        </h3>
-
-        <div className="mt-2">
-          <span className={`px-2 py-0.5 text-[10px] font-black rounded uppercase tracking-wider ${product.stock > 0
-            ? 'bg-[#eBfBF3] text-[#2dB97A]'
-            : 'bg-red-50 text-red-600'
-            }`}>
-            {product.stock > 0 ? `STOCK: ${product.stock}` : 'AGOTADO'}
-          </span>
-        </div>
-
-        {/* Space filler to push quantity and buttons to bottom */}
-        <div className="flex-1"></div>
-
-        {/* Quantity */}
-        <div className="mt-4 mb-4 flex items-center justify-between gap-2">
-          <p className="text-[12px] font-semibold text-gray-400">Cantidad</p>
-          <div className="flex items-center border border-gray-100 rounded overflow-hidden bg-white h-[30px] w-fit shadow-sm">
-            <button
-              onClick={decrement}
-              className="px-3 h-full hover:bg-gray-50 text-gray-600 transition-colors text-sm font-bold border-r border-gray-100"
-            >
-              -
-            </button>
-            <div className="w-8 h-full flex items-center justify-center text-[13px] font-black text-gray-900">
-              {qty}
-            </div>
-            <button
-              onClick={increment}
-              className="px-3 h-full hover:bg-gray-50 text-gray-600 transition-colors text-sm font-bold border-l border-gray-100"
-            >
-              +
-            </button>
-          </div>
-        </div>
-
-        {canManage && (
-          <div className="flex items-center gap-2 mb-3 border-t border-gray-50 pt-3">
-            <button
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="text-[9px] font-black text-amber-600 hover:text-amber-800 uppercase tracking-widest transition-colors flex-1 text-center bg-amber-50 py-1.5 rounded"
-            >
-              Editar
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(e); }}
-              className="text-[9px] font-black text-red-500 hover:text-red-700 uppercase tracking-widest transition-colors flex-1 text-center bg-red-50 py-1.5 rounded"
-            >
-              Eliminar
-            </button>
-          </div>
-        )}
-      </div>
-
-      <button
-        onClick={(e) => { e.stopPropagation(); onAddToCart(product, qty); }}
-        className="w-full bg-[#fdc401] hover:bg-[#edb801] text-black py-3 font-black text-[12px] transition-colors uppercase tracking-wider flex items-center justify-center gap-2 mt-auto"
-      >
-        <ShoppingCart className="w-4 h-4 text-black/60" strokeWidth={2.5}/>
-        AGREGAR AL CARRITO
-      </button>
     </div>
   );
 }

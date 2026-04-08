@@ -21,6 +21,7 @@ import { HelpContactView } from './components/HelpContactView';
 import { CartToast } from './components/CartToast';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { ClipboardList } from 'lucide-react';
+import { FavoritesView } from './components/FavoritesView';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -107,6 +108,8 @@ function App() {
                 <ProductGrid
                   isAuthenticated={isAuthenticated}
                   userRole={userRole}
+                  userId={session?.user?.id}
+                  onRequireLogin={() => openAuthModal('login')}
                 />
                 
                 {/* Sección de Proveedores */}
@@ -128,10 +131,19 @@ function App() {
                 </section>
               </>
             } />
+            <Route path="/favoritos" element={
+              <FavoritesView
+                isAuthenticated={isAuthenticated}
+                userId={session?.user?.id}
+                onRequireLogin={() => openAuthModal('login')}
+              />
+            } />
             <Route path="/producto/:id" element={
               <ProductDetail
                 isAuthenticated={isAuthenticated}
                 userRole={userRole}
+                userId={session?.user?.id}
+                onRequireLogin={() => openAuthModal('login')}
               />
             } />
             <Route path="/perfil" element={

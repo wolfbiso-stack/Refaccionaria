@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Menu, ClipboardList, ShoppingCart, User } from 'lucide-react';
+import { Menu, ClipboardList, ShoppingCart, User, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 interface HeaderProps {
@@ -274,6 +274,10 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
               </Link>
               <Link to="/proximamente" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
                 Nosotros
+              </Link>
+              <Link to="/favoritos" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full gap-1.5">
+                <Heart className="w-3.5 h-3.5" strokeWidth={2.5}/>
+                Favoritos
               </Link>
               <Link to="/ayuda-contacto" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
                 Contacto
