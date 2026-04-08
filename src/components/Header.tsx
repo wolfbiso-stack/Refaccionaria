@@ -73,12 +73,9 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
 
   return (
     <header className="relative z-20 font-sans border-b border-gray-200">
-      {/* Bloque Principal Amarillo */}
-      <div className="bg-[#fdc401] text-[#1a1a1a]">
-
-        {/* Top Row (Thin) */}
-        <div className="border-b border-black/10 hidden md:block">
-          <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12">
+      {/* Top Row (Thin) - Amarillo */}
+      <div className="bg-[#fdc401] text-[#1a1a1a] hidden md:block border-b border-black/10">
+        <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12">
             <div className="flex justify-between items-center h-8 text-[12px] font-medium">
               <div className="flex items-center space-x-5">
                 <Link to="/ayuda-contacto" className="opacity-80 hover:opacity-100 transition-opacity">Ayuda y Contacto</Link>
@@ -99,20 +96,21 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
           </div>
         </div>
 
-        {/* Main Row (Thick) */}
-        <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 py-3 lg:py-4">
+      {/* Main Row (Thick) - Blanca */}
+      <div className="bg-white text-gray-900 border-b border-gray-100 shadow-sm relative z-10">
+        <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 py-2 lg:py-2">
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4 lg:gap-8">
 
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center justify-center lg:justify-start">
-              <Link to="/" className="hover:opacity-90 transition-opacity">
-                <img src="/logo.png" alt="Logo" className="h-[52px] sm:h-[64px] lg:h-[72px] w-auto object-contain" />
+              <Link to="/" className="hover:opacity-90 transition-opacity block">
+                <img src="/logo.png" alt="Logo" className="h-[64px] sm:h-[76px] lg:h-[80px] w-auto object-contain drop-shadow-sm origin-left" />
               </Link>
             </div>
 
             {/* Búsqueda Rediseñada Ovalada */}
             <div className="w-full lg:flex-1 relative" ref={dropdownRef}>
-              <form onSubmit={handleSearchSubmit} className="relative w-full h-[44px] rounded-full overflow-hidden shadow-sm bg-white border border-transparent focus-within:border-black/10 focus-within:ring-4 focus-within:ring-white/50 transition-all">
+              <form onSubmit={handleSearchSubmit} className="relative w-full h-[44px] rounded-full overflow-hidden shadow-inner bg-gray-50 border border-gray-200 focus-within:border-amber-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-amber-400/20 transition-all">
                 <input
                   type="text"
                   value={searchQuery}
@@ -122,7 +120,7 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
                   }}
                   onFocus={() => { if (searchQuery.trim()) setShowDropdown(true); }}
                   placeholder="Busca productos, partes, marcas..."
-                  className="w-full h-full pl-5 pr-12 text-[14px] text-gray-900 placeholder-gray-400 border-none focus:ring-0 outline-none bg-white font-normal"
+                  className="w-full h-full pl-5 pr-12 text-[14px] text-gray-900 placeholder-gray-500 border-none focus:ring-0 outline-none bg-transparent font-normal"
                 />
                 <button type="submit" className="absolute right-0 top-0 bottom-0 w-12 flex items-center justify-center text-gray-400 hover:text-gray-800 transition-colors">
                   <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -234,31 +232,31 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
         </div>
       </div>
 
-      {/* Bottom Bar (White) */}
-      <div className="bg-white">
+      {/* Bottom Bar (Yellow) */}
+      <div className="bg-[#fdc401] text-[#1a1a1a]">
         <div className="max-w-[1700px] mx-auto">
-          <div className="flex flex-col lg:flex-row items-center">
+          <div className="flex flex-col lg:flex-row items-center border-t border-[#1a1a1a]/10">
 
             {/* Categories Button (Left) */}
             <div className="w-full lg:w-auto hidden lg:flex items-center h-[46px] lg:h-[50px] px-4">
               <button
                 onClick={onOpenSidebar}
-                className="h-full flex items-center gap-3 hover:text-amber-500 transition-colors text-gray-900 group"
+                className="h-full flex items-center gap-3 hover:opacity-80 transition-opacity text-[#1a1a1a] group"
               >
                 <Menu className="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity" strokeWidth={2} />
                 <span className="text-[14px] font-bold tracking-tight">Todas las Categorías</span>
               </button>
-              <div className="h-5 w-[1px] bg-gray-200 ml-6 mr-2"></div>
+              <div className="h-5 w-[1px] bg-[#1a1a1a]/20 ml-6 mr-2"></div>
             </div>
 
             {/* Mobile Categories Toggle */}
-            <div className="w-full lg:hidden border-b border-gray-100">
+            <div className="w-full lg:hidden border-b border-[#1a1a1a]/10">
               <button
                 onClick={onOpenSidebar}
-                className="w-full h-[46px] px-4 flex items-center justify-center hover:bg-gray-50 transition-colors text-black"
+                className="w-full h-[46px] px-4 flex items-center justify-center hover:bg-black/5 transition-colors text-[#1a1a1a]"
               >
                 <div className="flex items-center space-x-3">
-                  <Menu className="w-5 h-5 text-gray-500" strokeWidth={2} />
+                  <Menu className="w-5 h-5 opacity-80" strokeWidth={2} />
                   <span className="text-[14px] font-bold">Menú Principal</span>
                 </div>
               </button>
@@ -266,18 +264,18 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
 
             {/* Nav Links (Middle) */}
             <div className="w-full lg:flex-1 px-4 lg:px-2 flex items-center justify-center lg:justify-start space-x-8 h-[46px] lg:h-[50px] overflow-x-auto no-scrollbar relative">
-              <Link to="/" className="flex items-center text-[14px] font-bold text-gray-900 hover:text-amber-500 transition-colors whitespace-nowrap h-full">
+              <Link to="/" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
                 Inicio
                 <svg className="w-3.5 h-3.5 ml-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
               </Link>
-              <Link to="/" className="flex items-center text-[14px] font-bold text-gray-900 hover:text-amber-500 transition-colors whitespace-nowrap h-full">
+              <Link to="/" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
                 Productos
                 <svg className="w-3.5 h-3.5 ml-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
               </Link>
-              <Link to="/proximamente" className="flex items-center text-[14px] font-bold text-gray-900 hover:text-amber-500 transition-colors whitespace-nowrap h-full">
+              <Link to="/proximamente" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
                 Nosotros
               </Link>
-              <Link to="/ayuda-contacto" className="flex items-center text-[14px] font-bold text-gray-900 hover:text-amber-500 transition-colors whitespace-nowrap h-full">
+              <Link to="/ayuda-contacto" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
                 Contacto
               </Link>
             </div>
