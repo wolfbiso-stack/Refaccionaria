@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Menu, User, LogOut, Info, MapPin, Search, ClipboardList, ShoppingCart, ShieldAlert } from 'lucide-react';
+import { Menu, ClipboardList, ShoppingCart, User } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 interface HeaderProps {
@@ -10,7 +10,7 @@ interface HeaderProps {
   userRole?: 'admin' | 'empleado' | 'usuario' | null;
   userProfile?: any;
   email?: string;
-  onLoginClick: () => void;
+  onLoginClick: (mode?: 'login' | 'signup') => void;
   onLogoutClick: () => void;
   onOpenCart: () => void;
 }
@@ -22,17 +22,12 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
   const [results, setResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDropdown(false);
-      }
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setShowUserMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -77,50 +72,47 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
   };
 
   return (
-    <header className="relative z-20 font-sans">
-      {/* Top Bar */}
-      <div className="bg-[#fdc401] text-amber-950 text-xs sm:text-sm border-b border-black/5">
-        <div className="px-4 sm:px-6 lg:px-10">
-          <div className="flex justify-between items-center h-9 font-bold">
-            <div className="flex items-center space-x-6 overflow-x-auto no-scrollbar">
-              <Link to="/ayuda-contacto" className="flex items-center hover:text-white whitespace-nowrap transition-colors">
-                <Info className="w-4 h-4 mr-1.5" /> Ayuda y Contacto
-              </Link>
-              <Link to="/sucursales" className="flex items-center hover:text-white whitespace-nowrap transition-colors hidden md:flex">
-                <MapPin className="w-4 h-4 mr-1.5" /> Sucursales
-              </Link>
-            </div>
-            <div className="hidden lg:flex items-center space-x-6">
+    <header className="relative z-20 font-sans border-b border-gray-200">
+      {/* Bloque Principal Amarillo */}
+      <div className="bg-[#fdc401] text-[#1a1a1a]">
 
+        {/* Top Row (Thin) */}
+        <div className="border-b border-black/10 hidden md:block">
+          <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12">
+            <div className="flex justify-between items-center h-8 text-[12px] font-medium">
+              <div className="flex items-center space-x-5">
+                <Link to="/ayuda-contacto" className="opacity-80 hover:opacity-100 transition-opacity">Ayuda y Contacto</Link>
+                <Link to="/sucursales" className="opacity-80 hover:opacity-100 transition-opacity">Sucursales</Link>
+              </div>
+              <div className="flex items-center">
+                {isAuthenticated && (
+                  <span className="flex items-center gap-4">
+                    {(userRole === 'admin' || userRole === 'empleado') && (
+                      <Link to="/dashboard" className="hidden lg:block font-bold opacity-80 hover:opacity-100 transition-opacity">Panel Admin</Link>
+                    )}
+                    <span className="opacity-80">Hola, <span className="font-bold opacity-100">{userProfile?.first_name || email?.split('@')[0] || 'Usuario'}</span></span>
+                    <button onClick={() => onLogoutClick()} className="opacity-80 hover:opacity-100 transition-opacity">Cerrar Sesión</button>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Bar */}
-      <div className="bg-white text-gray-900 shadow-sm border-b border-gray-100">
-        <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 py-3 lg:py-5">
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
+        {/* Main Row (Thick) */}
+        <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 py-3 lg:py-4">
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-4 lg:gap-8">
 
-            {/* Logo & Category Menu */}
-            <div className="flex items-center justify-between w-full lg:w-auto">
-              <Link to="/" className="flex items-center space-x-4 hover:opacity-90 transition-opacity">
-                <img src="/logo.png" alt="Logo" className="h-14 sm:h-16 lg:h-20 w-auto object-contain drop-shadow-sm" />
-                <span className="font-extrabold text-3xl tracking-tighter hidden sm:block text-gray-900 uppercase"></span>
+            {/* Logo */}
+            <div className="flex-shrink-0 flex items-center justify-center lg:justify-start">
+              <Link to="/" className="hover:opacity-90 transition-opacity">
+                <img src="/logo.png" alt="Logo" className="h-[52px] sm:h-[64px] lg:h-[72px] w-auto object-contain" />
               </Link>
-
-              <button
-                onClick={onOpenSidebar}
-                className="ml-4 flex items-center space-x-2 bg-[#fdc401] hover:bg-[#eeb801] text-black px-4 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#fdc401] shadow-sm"
-              >
-                <Menu className="w-5 h-5" />
-                <span className="font-bold hidden md:block">Menú de categorías</span>
-              </button>
             </div>
 
-            {/* Search Bar */}
-            <div className="w-full lg:flex-1 max-w-3xl mx-0 lg:mx-8 relative" ref={dropdownRef}>
-              <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
+            {/* Búsqueda Rediseñada Ovalada */}
+            <div className="w-full lg:flex-1 relative" ref={dropdownRef}>
+              <form onSubmit={handleSearchSubmit} className="relative w-full h-[44px] rounded-full overflow-hidden shadow-sm bg-white border border-transparent focus-within:border-black/10 focus-within:ring-4 focus-within:ring-white/50 transition-all">
                 <input
                   type="text"
                   value={searchQuery}
@@ -129,22 +121,22 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
                     setShowDropdown(true);
                   }}
                   onFocus={() => { if (searchQuery.trim()) setShowDropdown(true); }}
-                  placeholder="Buscar productos por número de parte o nombre"
-                  className="w-full pl-4 pr-12 py-3 rounded-md text-gray-900 placeholder-gray-400 border border-gray-200 focus:border-[#fdc401] focus:ring-1 focus:ring-[#fdc401] shadow-sm outline-none transition-all"
+                  placeholder="Busca productos, partes, marcas..."
+                  className="w-full h-full pl-5 pr-12 text-[14px] text-gray-900 placeholder-gray-400 border-none focus:ring-0 outline-none bg-white font-normal"
                 />
-                <button type="submit" className="absolute right-0 h-full px-4 text-gray-400 hover:text-[#fdc401] bg-gray-50 border-l border-gray-200 rounded-r-md transition-colors">
-                  <Search className="w-5 h-5 font-bold" />
+                <button type="submit" className="absolute right-0 top-0 bottom-0 w-12 flex items-center justify-center text-gray-400 hover:text-gray-800 transition-colors">
+                  <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </button>
               </form>
 
               {/* Instant Search Dropdown */}
               {showDropdown && searchQuery.trim().length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden z-50">
+                <div className="absolute top-[52px] left-0 right-0 bg-white shadow-2xl rounded-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
                   {isSearching ? (
-                    <div className="p-4 text-center text-sm text-gray-500">Buscando coincidencia...</div>
+                    <div className="p-4 text-center text-sm font-medium text-gray-400">Buscando coincidencia...</div>
                   ) : results.length > 0 ? (
                     <>
-                      <div className="max-h-96 overflow-y-auto">
+                      <div className="max-h-[350px] overflow-y-auto">
                         {results.map((prod) => (
                           <button
                             key={prod.id}
@@ -153,18 +145,18 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
                               setSearchQuery("");
                               navigate(`/producto/${prod.slug || prod.id}`);
                             }}
-                            className="w-full text-left flex items-center gap-3 p-3 hover:bg-gray-50 border-b border-gray-50 transition-colors"
+                            className="w-full text-left flex items-center gap-4 p-3 hover:bg-gray-50 border-b border-gray-50 transition-colors"
                           >
-                            <div className="w-12 h-12 bg-gray-100 rounded flex-shrink-0 overflow-hidden">
+                            <div className="w-12 h-12 bg-white rounded-lg border border-gray-100 flex-shrink-0 overflow-hidden p-1">
                               {prod.image_url ? (
-                                <img src={prod.image_url} className="w-full h-full object-cover" alt="" />
+                                <img src={prod.image_url} className="w-full h-full object-contain" alt="" />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">Sin img</div>
+                                <div className="w-full h-full flex items-center justify-center text-gray-300 text-[10px] text-center font-bold">Sin foto</div>
                               )}
                             </div>
                             <div className="flex-1 overflow-hidden">
-                              <p className="font-bold text-gray-900 text-sm truncate">{prod.name}</p>
-                              <p className="text-xs text-gray-500 font-mono">{prod.sku}</p>
+                              <p className="font-bold text-gray-900 text-[13px] truncate capitalize">{prod.name.toLowerCase()}</p>
+                              <p className="text-[11px] text-[#fdc401] font-bold mt-0.5 bg-black inline-block px-1.5 py-0.5 rounded tracking-wide">{prod.sku}</p>
                             </div>
                           </button>
                         ))}
@@ -174,13 +166,13 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
                           setShowDropdown(false);
                           navigate(`/?q=${encodeURIComponent(searchQuery.trim())}`);
                         }}
-                        className="w-full p-3 bg-gray-50 text-center text-sm font-bold text-amber-700 hover:bg-gray-100 hover:text-amber-800 transition-colors border-t border-gray-100"
+                        className="w-full p-3 bg-gray-50 text-center text-[13px] font-bold text-gray-900 hover:bg-gray-100 transition-colors border-t border-gray-200"
                       >
-                        Mostrar todos los resultados para "{searchQuery}"
+                        Ver todos los resultados
                       </button>
                     </>
                   ) : (
-                    <div className="p-4 text-center text-sm text-gray-500">
+                    <div className="p-4 text-center text-[13px] font-medium text-gray-500">
                       No se encontraron resultados para "{searchQuery}".
                     </div>
                   )}
@@ -188,92 +180,107 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
               )}
             </div>
 
-            {/* Action Icons */}
-            <div className="flex items-center space-x-6 lg:space-x-8 w-full lg:w-auto justify-center lg:justify-end mt-4 lg:mt-0">
+            {/* Action Icons (Autonex Style) */}
+            <div className="flex items-center justify-center space-x-2 flex-shrink-0 lg:ml-4">
 
+              {/* User Sign In / Account */}
               {isAuthenticated ? (
-                <div className="relative mt-1" ref={userMenuRef}>
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-3 bg-gray-50 hover:bg-gray-100 px-4 py-2 rounded-xl transition-all border border-gray-200 group"
-                  >
-                    <div className="w-8 h-8 bg-[#fdc401]/20 rounded-full flex items-center justify-center border border-[#fdc401]/30 group-hover:bg-[#fdc401]/30 transition-colors">
-                      <User className="w-5 h-5 text-gray-900" />
-                    </div>
-                    <div className="text-left hidden sm:block">
-                      <p className="text-xs font-black text-gray-900 truncate max-w-[120px]">
-                        {userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : (email || 'Usuario')}
-                      </p>
-                      <p className="text-[10px] font-bold text-gray-500 leading-none">Mi Cuenta</p>
-                    </div>
-                  </button>
-
-                  {/* User Dropdown Menu */}
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="p-4 bg-gray-50/50 border-b border-gray-100">
-                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Usuario</p>
-                        <p className="text-sm font-bold text-gray-900 truncate">{email}</p>
-                      </div>
-                      <div className="p-2">
-                        <Link
-                          to="/perfil"
-                          onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-gray-700 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-all"
-                        >
-                          <User className="w-4 h-4" />
-                          Ver Perfil
-                        </Link>
-                        {(userRole === 'admin' || userRole === 'empleado') && (
-                          <Link
-                            to="/dashboard"
-                            onClick={() => setShowUserMenu(false)}
-                            className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-gray-700 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-all"
-                          >
-                            <ShieldAlert className="w-4 h-4" />
-                            {userRole === 'admin' ? 'Panel Admin' : 'Panel Empleado'}
-                          </Link>
-                        )}
-                        <button
-                          onClick={() => {
-                            setShowUserMenu(false);
-                            onLogoutClick();
-                          }}
-                          className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all text-left mt-1"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          Cerrar Sesión
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                <div className="flex items-center group cursor-pointer hover:bg-black/5 p-1.5 rounded-lg transition-colors mr-1" onClick={() => navigate('/perfil')}>
+                  <div className="w-[38px] h-[38px] rounded-full border border-[#1a1a1a]/20 flex items-center justify-center">
+                    <User className="w-[18px] h-[18px] opacity-90" strokeWidth={1.5} />
+                  </div>
+                  <div className="ml-2 hidden xl:block text-left leading-tight">
+                    <p className="text-[11px] opacity-80">Mi Cuenta</p>
+                    <p className="text-[13px] font-bold">Opciones</p>
+                  </div>
                 </div>
               ) : (
-                <button onClick={onLoginClick} className="flex flex-col items-center group relative mt-1">
-                  <User className="w-6 h-6 mb-1 text-black group-hover:text-[#fdc401] transition-colors" />
-                  <span className="text-xs font-semibold text-gray-500 group-hover:text-gray-900 transition-colors">Iniciar sesión</span>
-                </button>
+                <div className="flex items-center group cursor-pointer hover:bg-black/5 p-1.5 rounded-lg transition-colors mr-1 text-left" onClick={() => onLoginClick('login')}>
+                  <div className="w-[38px] h-[38px] rounded-full border border-[#1a1a1a]/20 flex items-center justify-center">
+                    <User className="w-[18px] h-[18px] opacity-90" strokeWidth={1.5} />
+                  </div>
+                  <div className="ml-2 hidden xl:block text-left leading-tight">
+                    <button className="text-[11px] opacity-80 hover:opacity-100 transition-opacity text-left block w-full">
+                      Iniciar Sesión
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); onLoginClick('signup'); }} className="text-[13px] font-bold hover:opacity-80 transition-opacity text-left block w-full">
+                      Cuenta
+                    </button>
+                  </div>
+                </div>
               )}
 
-              <Link to="/cotizador" className="flex flex-col items-center group mt-1">
-                <ClipboardList className="w-6 h-6 mb-1 text-black group-hover:text-[#fdc401] transition-colors" />
-                <span className="text-xs font-semibold text-gray-500 group-hover:text-gray-900 transition-colors">Cotizador</span>
+              {/* Cotizador */}
+              <Link to="/cotizador" className="flex items-center group cursor-pointer hover:bg-black/5 p-1.5 rounded-lg transition-colors mr-2 text-left">
+                <div className="w-[38px] h-[38px] rounded-full border border-[#1a1a1a]/20 flex items-center justify-center">
+                  <ClipboardList className="w-[18px] h-[18px] opacity-90" strokeWidth={1.5} />
+                </div>
+                <div className="ml-2 hidden xl:block text-left leading-tight">
+                  <p className="text-[13px] font-bold">Cotizador</p>
+                </div>
               </Link>
 
+              {/* Icon 4 (Cart) */}
+              <button onClick={onOpenCart} className="flex items-center justify-center w-[38px] h-[38px] rounded-full border border-[#1a1a1a]/20 hover:bg-black/5 transition-colors relative" title="Carrito">
+                <ShoppingCart className="w-[18px] h-[18px] opacity-90" strokeWidth={1.5} />
+                <span className="absolute -top-1.5 -right-1.5 bg-[#fdc401] text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-[0_1px_3px_rgba(0,0,0,0.3)] border border-[#1a1a1a]/10 leading-none">
+                  {totalItems > 99 ? '99+' : totalItems}
+                </span>
+              </button>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Bar (White) */}
+      <div className="bg-white">
+        <div className="max-w-[1700px] mx-auto">
+          <div className="flex flex-col lg:flex-row items-center">
+
+            {/* Categories Button (Left) */}
+            <div className="w-full lg:w-auto hidden lg:flex items-center h-[46px] lg:h-[50px] px-4">
               <button
-                onClick={onOpenCart}
-                className="flex flex-col items-center group relative mt-1"
+                onClick={onOpenSidebar}
+                className="h-full flex items-center gap-3 hover:text-amber-500 transition-colors text-gray-900 group"
               >
-                <ShoppingCart className="w-6 h-6 mb-1 text-black group-hover:text-[#fdc401] transition-colors" />
-                <span className="text-xs font-semibold text-gray-500 group-hover:text-gray-900 transition-colors">Mi Carrito</span>
-                {totalItems > 0 && (
-                  <span className="absolute -top-1 right-2 lg:-right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ring-2 ring-white">
-                    {totalItems}
-                  </span>
-                )}
+                <Menu className="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity" strokeWidth={2} />
+                <span className="text-[14px] font-bold tracking-tight">Todas las Categorías</span>
+              </button>
+              <div className="h-5 w-[1px] bg-gray-200 ml-6 mr-2"></div>
+            </div>
+
+            {/* Mobile Categories Toggle */}
+            <div className="w-full lg:hidden border-b border-gray-100">
+              <button
+                onClick={onOpenSidebar}
+                className="w-full h-[46px] px-4 flex items-center justify-center hover:bg-gray-50 transition-colors text-black"
+              >
+                <div className="flex items-center space-x-3">
+                  <Menu className="w-5 h-5 text-gray-500" strokeWidth={2} />
+                  <span className="text-[14px] font-bold">Menú Principal</span>
+                </div>
               </button>
             </div>
 
+            {/* Nav Links (Middle) */}
+            <div className="w-full lg:flex-1 px-4 lg:px-2 flex items-center justify-center lg:justify-start space-x-8 h-[46px] lg:h-[50px] overflow-x-auto no-scrollbar relative">
+              <Link to="/" className="flex items-center text-[14px] font-bold text-gray-900 hover:text-amber-500 transition-colors whitespace-nowrap h-full">
+                Inicio
+                <svg className="w-3.5 h-3.5 ml-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </Link>
+              <Link to="/" className="flex items-center text-[14px] font-bold text-gray-900 hover:text-amber-500 transition-colors whitespace-nowrap h-full">
+                Productos
+                <svg className="w-3.5 h-3.5 ml-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </Link>
+              <Link to="/proximamente" className="flex items-center text-[14px] font-bold text-gray-900 hover:text-amber-500 transition-colors whitespace-nowrap h-full">
+                Nosotros
+              </Link>
+              <Link to="/ayuda-contacto" className="flex items-center text-[14px] font-bold text-gray-900 hover:text-amber-500 transition-colors whitespace-nowrap h-full">
+                Contacto
+              </Link>
+            </div>
           </div>
         </div>
       </div>

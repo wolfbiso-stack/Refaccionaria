@@ -28,7 +28,13 @@ function App() {
   const [userRole, setUserRole] = useState<'admin' | 'empleado' | 'usuario' | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  const openAuthModal = (mode: 'login' | 'signup' = 'login') => {
+    setAuthModalMode(mode);
+    setIsLoginModalOpen(true);
+  };
 
   const fetchUserInfo = async (userId: string) => {
     try {
@@ -78,7 +84,7 @@ function App() {
           userRole={userRole}
           userProfile={userProfile}
           email={session?.user?.email}
-          onLoginClick={() => setIsLoginModalOpen(true)}
+          onLoginClick={openAuthModal}
           onLogoutClick={handleLogout}
           onOpenCart={() => setIsCartOpen(true)}
         />
@@ -89,6 +95,15 @@ function App() {
           <Routes>
             <Route path="/" element={
               <>
+                {/* Banner Promocional */}
+                <div className="mb-8 max-w-3xl mx-auto w-full overflow-hidden shadow-sm border border-gray-100">
+                  <img 
+                    src="/banner.png" 
+                    alt="Banner Promocional" 
+                    className="w-full h-auto object-contain hover:opacity-95 transition-opacity cursor-pointer"
+                  />
+                </div>
+
                 <ProductGrid
                   isAuthenticated={isAuthenticated}
                   userRole={userRole}
@@ -101,8 +116,8 @@ function App() {
                     <div className="w-24 h-1.5 bg-[#fdc401] mx-auto rounded-full"></div>
                   </div>
                   <div className="relative group max-w-5xl mx-auto">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-amber-100 to-amber-50 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                    <div className="relative bg-white p-4 rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-amber-100 to-amber-50 blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                    <div className="relative bg-white p-4 shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
                       <img 
                         src="/proveedores.png" 
                         alt="Nuestros Proveedores" 
@@ -125,7 +140,7 @@ function App() {
                   <h1 className="text-2xl font-bold text-red-600">Acceso Restringido</h1>
                   <p className="text-gray-500 mt-2">Debes iniciar sesión para ver tu perfil.</p>
                   <button
-                    onClick={() => setIsLoginModalOpen(true)}
+                    onClick={() => openAuthModal('login')}
                     className="mt-4 px-6 py-2 bg-amber-500 text-amber-950 rounded-lg font-bold hover:bg-amber-600 transition-colors"
                   >
                     Iniciar Sesión
@@ -171,7 +186,7 @@ function App() {
                   </p>
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <button
-                      onClick={() => setIsLoginModalOpen(true)}
+                      onClick={() => openAuthModal('login')}
                       className="w-full sm:w-auto px-10 py-5 bg-[#fdc401] text-black rounded-2xl font-black shadow-xl shadow-[#fdc401]/20 hover:bg-[#cc9e01] transition-all active:scale-95 flex items-center justify-center gap-3"
                     >
                       Iniciar Sesión / Registrarse
@@ -191,6 +206,7 @@ function App() {
 
         <LoginModal
           isOpen={isLoginModalOpen}
+          initialMode={authModalMode}
           onClose={() => setIsLoginModalOpen(false)}
           onSuccess={() => setIsLoginModalOpen(false)}
         />

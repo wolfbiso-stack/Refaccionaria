@@ -170,7 +170,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
           <p className="text-gray-400 font-bold italic">No se encontraron productos en esta sección.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {products.map((product) => (
             <ProductSmallCard
               key={product.id}
@@ -221,7 +221,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null }: Produc
   );
 }
 
-// Componente Interno para la nueva tarjeta horizontal compacta
+// Componente Interno para la nueva tarjeta vertical basada en el diseño proporcionado
 function ProductSmallCard({ product, onAddToCart, onNavigate, onEdit, onDelete, canManage }: any) {
   const [qty, setQty] = useState(1);
 
@@ -238,98 +238,96 @@ function ProductSmallCard({ product, onAddToCart, onNavigate, onEdit, onDelete, 
   return (
     <div
       onClick={onNavigate}
-      className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-xl hover:shadow-gray-200/40 transition-all duration-300 group flex flex-col cursor-pointer overflow-hidden h-full"
+      className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-gray-200 transition-all duration-300 group flex flex-col cursor-pointer overflow-hidden h-full"
     >
-      <div className="flex p-4 gap-4 relative">
-        {/* Branding top right */}
-        {product.brand && (
+      {/* Top section: Image and SKU */}
+      <div className="relative h-40 sm:h-44 p-4 flex items-center justify-center bg-white w-full">
+        {/* SKU top right */}
+        {product.sku && (
           <div className="absolute top-4 right-4 z-10">
-            <p className="text-[10px] font-black text-gray-950 tracking-tighter uppercase">
-              {product.brand}
+            <p className="text-[11px] sm:text-[12px] font-black text-[#F26522] uppercase tracking-tighter">
+              {product.sku}
             </p>
           </div>
         )}
 
-        {/* Image side - Left */}
-        <div className="w-2/5 min-w-[120px] h-32 flex items-center justify-center bg-gray-50/50 rounded-xl overflow-hidden p-2 group-hover:bg-white transition-colors">
-          {product.image_url ? (
-            <img
-              src={product.image_url}
-              alt={product.name}
-              className="max-w-full max-h-full object-contain transition-transform duration-700 group-hover:scale-110"
-            />
-          ) : (
-            <ShoppingCart className="w-10 h-10 text-gray-100" />
-          )}
+        {product.image_url ? (
+          <img
+            src={product.image_url}
+            alt={product.name}
+            className="max-w-full max-h-full object-contain transition-transform duration-700 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center text-gray-300 h-full w-full bg-gray-50/50 rounded-lg">
+             <span className="text-xs font-medium">Sin imagen</span>
+          </div>
+        )}
+      </div>
+
+      {/* Info section */}
+      <div className="px-4 pb-1 flex flex-col flex-1">
+        <h3 className="text-[13px] sm:text-[14px] font-black text-gray-900 leading-snug line-clamp-2 min-h-[40px] capitalize tracking-wide">
+          {product.name?.toLowerCase() || ''}
+        </h3>
+
+        <div className="mt-2">
+          <span className={`px-2 py-0.5 text-[10px] font-black rounded uppercase tracking-wider ${product.stock > 0
+            ? 'bg-[#eBfBF3] text-[#2dB97A]'
+            : 'bg-red-50 text-red-600'
+            }`}>
+            {product.stock > 0 ? `STOCK: ${product.stock}` : 'AGOTADO'}
+          </span>
         </div>
 
-        {/* Data side - Right */}
-        <div className="flex-1 flex flex-col pt-1">
-          {product.sku && (
-            <p className="text-xs font-black text-[#fdc401] uppercase tracking-tight mb-0.5" title={product.sku}>
-              {product.sku}
-            </p>
-          )}
-          <h3 className="text-sm lg:text-base font-bold text-gray-900 leading-tight line-clamp-2 pr-12 mb-1">
-            {product.name}
-          </h3>
+        {/* Space filler to push quantity and buttons to bottom */}
+        <div className="flex-1"></div>
 
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`px-2 py-0.5 text-[10px] font-black rounded-md border uppercase tracking-tighter shadow-sm ${product.stock > 0
-              ? 'bg-green-50 text-green-700 border-green-200/30'
-              : 'bg-red-50 text-red-700 border-red-200/30'
-              }`}>
-              {product.stock > 0 ? `Stock: ${product.stock}` : 'Agotado'}
-            </span>
-          </div>
-
-          <div className="mt-auto flex flex-col gap-1.5">
-            <div className="flex flex-col gap-1">
-              <p className="text-[10px] font-bold text-gray-400">Cantidad</p>
-              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50/50 h-8 w-fit">
-                <button
-                  onClick={decrement}
-                  className="px-3 h-full hover:bg-gray-100 text-gray-500 transition-colors text-xs"
-                >
-                  -
-                </button>
-                <div className="w-10 h-full flex items-center justify-center text-sm font-black text-gray-900 bg-white border-x border-gray-200">
-                  {qty}
-                </div>
-                <button
-                  onClick={increment}
-                  className="px-3 h-full hover:bg-gray-100 text-amber-500 transition-colors text-xs"
-                >
-                  +
-                </button>
-              </div>
+        {/* Quantity */}
+        <div className="mt-4 mb-4 flex items-center justify-between gap-2">
+          <p className="text-[12px] font-semibold text-gray-400">Cantidad</p>
+          <div className="flex items-center border border-gray-100 rounded overflow-hidden bg-white h-[30px] w-fit shadow-sm">
+            <button
+              onClick={decrement}
+              className="px-3 h-full hover:bg-gray-50 text-gray-600 transition-colors text-sm font-bold border-r border-gray-100"
+            >
+              -
+            </button>
+            <div className="w-8 h-full flex items-center justify-center text-[13px] font-black text-gray-900">
+              {qty}
             </div>
-
-            {canManage && (
-              <div className="flex items-center gap-4 mt-1">
-                <button
-                  onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                  className="text-[9px] font-black text-amber-700 hover:underline uppercase tracking-widest"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onDelete(e); }}
-                  className="text-[9px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest"
-                >
-                  Eliminar
-                </button>
-              </div>
-            )}
+            <button
+              onClick={increment}
+              className="px-3 h-full hover:bg-gray-50 text-gray-600 transition-colors text-sm font-bold border-l border-gray-100"
+            >
+              +
+            </button>
           </div>
         </div>
+
+        {canManage && (
+          <div className="flex items-center gap-2 mb-3 border-t border-gray-50 pt-3">
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              className="text-[9px] font-black text-amber-600 hover:text-amber-800 uppercase tracking-widest transition-colors flex-1 text-center bg-amber-50 py-1.5 rounded"
+            >
+              Editar
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(e); }}
+              className="text-[9px] font-black text-red-500 hover:text-red-700 uppercase tracking-widest transition-colors flex-1 text-center bg-red-50 py-1.5 rounded"
+            >
+              Eliminar
+            </button>
+          </div>
+        )}
       </div>
 
       <button
         onClick={(e) => { e.stopPropagation(); onAddToCart(product, qty); }}
-        className="w-full bg-[#fdc401] hover:bg-amber-400 text-black py-3.5 font-black text-xs transition-all active:scale-95 shadow-inner uppercase tracking-widest border-t border-gray-100 mt-auto"
+        className="w-full bg-[#fdc401] hover:bg-[#edb801] text-black py-3 font-black text-[12px] transition-colors uppercase tracking-wider flex items-center justify-center gap-2 mt-auto"
       >
-        Agregar al carrito
+        <ShoppingCart className="w-4 h-4 text-black/60" strokeWidth={2.5}/>
+        AGREGAR AL CARRITO
       </button>
     </div>
   );

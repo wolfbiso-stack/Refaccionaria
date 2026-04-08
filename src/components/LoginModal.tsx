@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, LogIn, AlertCircle, UserPlus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -6,15 +6,26 @@ interface LoginModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    initialMode?: 'login' | 'signup';
 }
 
-export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
-    const [isSignUp, setIsSignUp] = useState(false);
+export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }: LoginModalProps) {
+    const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+
+    useEffect(() => {
+        if (isOpen) {
+            setIsSignUp(initialMode === 'signup');
+            setError(null);
+            setEmail('');
+            setPassword('');
+            setConfirmPassword('');
+        }
+    }, [isOpen, initialMode]);
 
     if (!isOpen) return null;
 
@@ -110,17 +121,17 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
             ></div>
 
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden relative z-10 animate-in fade-in zoom-in duration-200">
-                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <div className="flex items-center gap-2 text-gray-800">
-                        <LogIn className="h-5 w-5 text-blue-600" />
-                        <h3 className="text-lg font-bold">{isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}</h3>
-                    </div>
+                <div className="px-6 py-6 border-b border-gray-100 flex flex-col items-center justify-center bg-white relative">
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors"
+                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-50 p-2 rounded-full transition-colors"
                     >
                         <X className="h-5 w-5" />
                     </button>
+                    <img src="/logo.png" alt="Logo" className="h-12 w-auto mb-3 object-contain" />
+                    <h3 className="text-[16px] font-black text-gray-900 tracking-widest uppercase">
+                        {isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
+                    </h3>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6">
