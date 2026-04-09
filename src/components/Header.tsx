@@ -72,9 +72,9 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
   };
 
   return (
-    <header className="relative z-20 font-sans border-b border-gray-200">
+    <header className="relative z-20 font-sans border-b border-gray-200 flex flex-col">
       {/* Top Row (Thin) - Amarillo */}
-      <div className="bg-[#fdc401] text-[#1a1a1a] hidden md:block border-b border-black/10">
+      <div className="bg-[#fdc401] text-[#1a1a1a] hidden md:block border-b border-black/10 order-1">
         <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12">
             <div className="flex justify-between items-center h-8 text-[12px] font-medium">
               <div className="flex items-center space-x-5">
@@ -97,19 +97,19 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
         </div>
 
       {/* Main Row (Thick) - Blanca */}
-      <div className="bg-white text-gray-900 border-b border-gray-100 shadow-sm relative z-10">
+      <div className="bg-white text-gray-900 border-b border-gray-100 shadow-sm relative z-10 order-2">
         <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 py-2 lg:py-2">
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-4 lg:gap-8">
+          <div className="flex flex-wrap lg:flex-nowrap justify-between items-center gap-y-4 gap-x-3 lg:gap-8">
 
             {/* Logo */}
-            <div className="flex-shrink-0 flex items-center justify-center lg:justify-start">
+            <div className="flex-shrink-0 flex items-center justify-center lg:justify-start order-1">
               <Link to="/" className="hover:opacity-90 transition-opacity block">
-                <img src="/logo.png" alt="Logo" className="h-[64px] sm:h-[76px] lg:h-[80px] w-auto object-contain drop-shadow-sm origin-left" />
+                <img src="/logo.png" alt="Logo" className="h-[48px] sm:h-[64px] lg:h-[80px] w-auto object-contain drop-shadow-sm origin-left" />
               </Link>
             </div>
 
             {/* Búsqueda Rediseñada Ovalada */}
-            <div className="w-full lg:flex-1 relative" ref={dropdownRef}>
+            <div className="flex-1 lg:flex-1 relative order-2 min-w-[200px]" ref={dropdownRef}>
               <form onSubmit={handleSearchSubmit} className="relative w-full h-[44px] rounded-full overflow-hidden shadow-inner bg-gray-50 border border-gray-200 focus-within:border-amber-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-amber-400/20 transition-all">
                 <input
                   type="text"
@@ -179,7 +179,7 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
             </div>
 
             {/* Action Icons (Autonex Style) */}
-            <div className="flex items-center justify-center space-x-2 flex-shrink-0 lg:ml-4">
+            <div className="flex items-center justify-center space-x-2 flex-shrink-0 lg:ml-4 flex-1 lg:flex-none w-full lg:w-auto order-3 pt-2 lg:pt-0 border-t lg:border-none border-gray-100">
 
               {/* User Sign In / Account */}
               {isAuthenticated ? (
@@ -233,7 +233,7 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
       </div>
 
       {/* Bottom Bar (Yellow) */}
-      <div className="bg-[#fdc401] text-[#1a1a1a]">
+      <div className="bg-[#fdc401] text-[#1a1a1a] order-1 lg:order-3">
         <div className="max-w-[1700px] mx-auto">
           <div className="flex flex-col lg:flex-row items-center border-t border-[#1a1a1a]/10">
 
