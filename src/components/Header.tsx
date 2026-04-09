@@ -253,7 +253,7 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
             <div className="w-full lg:hidden border-b border-[#1a1a1a]/10">
               <button
                 onClick={onOpenSidebar}
-                className="w-full h-[46px] px-4 flex items-center justify-center hover:bg-black/5 transition-colors text-[#1a1a1a]"
+                className="w-full h-[46px] px-4 flex items-center justify-start hover:bg-black/5 transition-colors text-[#1a1a1a]"
               >
                 <div className="flex items-center space-x-3">
                   <Menu className="w-5 h-5 opacity-80" strokeWidth={2} />
