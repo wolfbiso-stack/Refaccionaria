@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Plus, ShoppingCart, Heart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 import { ProductFormModal } from './ProductFormModal';
@@ -30,7 +30,7 @@ interface ProductGridProps {
 export function ProductGrid({ isAuthenticated = false, userRole = null, userId, onRequireLogin }: ProductGridProps) {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
   const sortBy = searchParams.get('sort') || 'stock-desc';
   const [products, setProducts] = useState<Product[]>([]);
@@ -96,11 +96,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
     setCurrentPage(1);
   }, [searchQuery, sortBy]);
 
-  const handleSortChange = (newSort: string) => {
-    const params = new URLSearchParams(searchParams);
-    params.set('sort', newSort);
-    setSearchParams(params);
-  };
+
 
   const handleDeleteProduct = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -193,20 +189,6 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
                 Nuevo Producto
               </button>
             )}
-
-            <div className="flex items-center gap-2 flex-1 sm:flex-none">
-              <select
-                value={sortBy}
-                onChange={(e) => handleSortChange(e.target.value)}
-                className="w-full sm:w-auto px-4 py-3 border border-gray-100 rounded-2xl text-xs font-black bg-white focus:ring-4 focus:ring-amber-500/10 outline-none shadow-sm cursor-pointer appearance-none text-gray-600 hover:border-amber-200 transition-all uppercase tracking-widest"
-              >
-                <option value="created_at-desc">Recientes</option>
-                <option value="stock-desc">Stock (Max)</option>
-                <option value="stock-asc">Stock (Min)</option>
-                <option value="name-asc">A-Z</option>
-                <option value="name-desc">Z-A</option>
-              </select>
-            </div>
           </div>
         )}
       </div>

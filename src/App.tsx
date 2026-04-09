@@ -97,11 +97,20 @@ function App() {
             <Route path="/" element={
               <>
                 {/* Banner Promocional */}
-                <div className="mb-8 max-w-3xl mx-auto w-full overflow-hidden shadow-sm border border-gray-100">
+                <div className="mb-10 max-w-4xl mx-auto w-full overflow-hidden shadow-sm border border-gray-100">
                   <img 
                     src="/banner.png" 
                     alt="Banner Promocional" 
                     className="w-full h-auto object-contain hover:opacity-95 transition-opacity cursor-pointer"
+                  />
+                </div>
+
+                {/* Banner de Productos (Compact Strip) - Pegado al catálogo */}
+                <div className="mb-0 w-full max-w-4xl mx-auto overflow-hidden relative h-[50px] sm:h-[70px] lg:h-[90px] shadow-sm bg-transparent rounded-2xl">
+                  <img 
+                    src="/productos.png" 
+                    alt="Productos" 
+                    className="absolute inset-0 w-full h-full object-cover object-center drop-shadow-sm"
                   />
                 </div>
 
