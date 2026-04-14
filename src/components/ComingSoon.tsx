@@ -40,7 +40,7 @@ export function ComingSoon() {
 
                 {/* Main Heading (Massive) */}
                 <div className="text-center space-y-3 md:space-y-6 mb-10 md:mb-16 w-full">
-                    <h1 className="text-[18vw] sm:text-[14vw] md:text-[10vw] lg:text-9xl font-[950] text-[#fdc401] tracking-tighter leading-none uppercase italic border-y-[6px] md:border-y-8 border-[#fdc401]/40 py-6 md:py-8 drop-shadow-[0_15px_15px_rgba(0,0,0,0.6)] animate-in slide-in-from-top-4 duration-1000">
+                    <h1 className="text-[11vw] sm:text-[14vw] md:text-[10vw] lg:text-9xl font-[950] text-[#fdc401] tracking-tighter leading-none uppercase italic border-y-[6px] md:border-y-8 border-[#fdc401]/40 py-6 md:py-8 drop-shadow-[0_15px_15px_rgba(0,0,0,0.6)] animate-in slide-in-from-top-4 duration-1000">
                         PRÓXIMA<span className="text-white">MENTE</span>
                     </h1>
                     <div className="flex items-center justify-center gap-2 md:gap-6 mt-4 md:mt-8">
