@@ -32,6 +32,10 @@ function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const [isCartOpen, setIsCartOpen] = useState(false);
+  // Detecta si Supabase redirigió aquí con un código de confirmación de email
+  const [isEmailCallback, setIsEmailCallback] = useState(
+    () => new URLSearchParams(window.location.search).has('code')
+  );
 
   const openAuthModal = (mode: 'login' | 'signup' = 'login') => {
     setAuthModalMode(mode);
@@ -79,6 +83,10 @@ function App() {
 
   return (
     <CartProvider>
+      {/* Overlay de confirmación de email — aparece si Supabase redirigió con ?code= */}
+      {isEmailCallback && (
+        <AuthCallback onDone={() => setIsEmailCallback(false)} />
+      )}
       <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
         <Header
           onOpenSidebar={() => setIsSidebarOpen(true)}
