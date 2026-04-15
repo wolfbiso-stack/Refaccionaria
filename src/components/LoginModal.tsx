@@ -53,6 +53,7 @@ export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }
                     email,
                     password,
                     options: {
+                        emailRedirectTo: 'https://cordobesarefacciones.mx/auth/callback',
                         data: {
                             role: 'usuario'
                         }

@@ -22,6 +22,7 @@ import { CartToast } from './components/CartToast';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { ClipboardList } from 'lucide-react';
 import { FavoritesView } from './components/FavoritesView';
+import AuthCallback from './pages/AuthCallback';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -220,6 +221,7 @@ function App() {
               )
             } />
             <Route path="/proximamente" element={<ComingSoon />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
           </Routes>
         </main>
 
