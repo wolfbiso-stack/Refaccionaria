@@ -1,62 +1,35 @@
-import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 
 export default function ActivarCuenta() {
   const [params] = useSearchParams();
-  const navigate = useNavigate();
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = params.get("token"); // Contiene el TokenHash
+    // Tomamos el hash que nos manda el template del correo
+    const token = params.get("token") || params.get("token_hash");
     const type = params.get("type");
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
-    if (token && type) {
-      // Verificamos el token usando el cliente de Supabase (Soporta PKCE nativamente)
-      supabase.auth.verifyOtp({
-        token_hash: token,
-        type: type as any
-      }).then(({ error }) => {
-        if (error) {
-          setError("El enlace ha expirado o es inválido. Por favor solicita uno nuevo.");
-          console.error("Error verificando OTP:", error.message);
-        } else {
-          // Activación exitosa. Supabase automáticamente inicia la sesión.
-          // Redirigimos al inicio después de un pequeño retraso para que el usuario pueda ver la pantalla.
-          setTimeout(() => {
-            window.location.href = "/";
-          }, 1500);
-        }
-      });
-    } else {
-      setError("Faltan parámetros en el enlace de activación.");
+    if (token && type && supabaseUrl) {
+      // IMPORTANTE: En el nuevo esquema PKCE de Supabase, la API de verificación
+      // requiere que el parámetro se llame "token_hash" 
+      const verifyUrl = `${supabaseUrl}/auth/v1/verify?token_hash=${token}&type=${type}&redirect_to=${window.location.origin}/`;
+      
+      // Redirigimos físicamente a Supabase. 
+      // Supabase hará la magia de validación y de inmediato redirigirá de vuelto al "redirect_to".
+      window.location.href = verifyUrl;
     }
   }, [params]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-      {error ? (
-        <div className="bg-red-50 text-red-600 p-6 rounded-2xl max-w-md w-full border border-red-100 shadow-sm">
-          <h2 className="text-xl font-bold mb-2">Error de activación</h2>
-          <p>{error}</p>
-          <button 
-            onClick={() => navigate("/")}
-            className="mt-6 px-6 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium transition-colors"
-          >
-            Volver al inicio
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="w-16 h-16 border-4 border-[#fdc401] border-t-transparent rounded-full animate-spin mb-6"></div>
-          <h2 className="text-2xl lg:text-3xl font-black text-gray-800 tracking-tight uppercase mb-2">
-            Verificando tu cuenta...
-          </h2>
-          <p className="text-gray-500 max-w-md mx-auto">
-            Estamos validando tu enlace seguro. En un momento serás redirigido.
-          </p>
-        </>
-      )}
+      <div className="w-16 h-16 border-4 border-[#fdc401] border-t-transparent rounded-full animate-spin mb-6"></div>
+      <h2 className="text-2xl lg:text-3xl font-black text-gray-800 tracking-tight uppercase mb-2">
+        Activando cuenta...
+      </h2>
+      <p className="text-gray-500 max-w-md mx-auto">
+        Por favor espera un momento mientras validamos tu información con el servidor.
+      </p>
     </div>
   );
 }
