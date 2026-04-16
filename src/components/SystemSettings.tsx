@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
-import { Upload, AlertCircle, CheckCircle, Settings as SettingsIcon, FileSpreadsheet, Loader2, ArrowLeft, MapPin, Database } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, Settings as SettingsIcon, FileSpreadsheet, Loader2, ArrowLeft, MapPin, Database, Layout } from 'lucide-react';
+import { BannerManager } from './BannerManager';
 
 interface DbProduct {
     id: string;
@@ -56,7 +57,7 @@ const generateSlug = (name: string, sku: string) => {
 };
 
 export function SystemSettings() {
-    const [activeModule, setActiveModule] = useState<'menu' | 'inventory' | 'zipcodes'>('menu');
+    const [activeModule, setActiveModule] = useState<'menu' | 'inventory' | 'zipcodes' | 'page_config'>('menu');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const cpFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -325,18 +326,42 @@ export function SystemSettings() {
                             Importa la base de datos de correos electrónicos y códigos postales de México por estados.
                         </p>
                     </button>
+
+                    {/* Module 3: Page Configuration (Banners) */}
+                    <button 
+                        onClick={() => setActiveModule('page_config')}
+                        className="bg-white p-10 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all text-left group md:col-span-2"
+                    >
+                        <div className="bg-amber-100 w-16 h-16 rounded-2xl flex items-center justify-center text-amber-600 mb-6 group-hover:bg-amber-600 group-hover:text-white transition-colors shadow-inner">
+                            <Layout className="w-8 h-8" />
+                        </div>
+                        <h2 className="text-2xl font-black text-gray-900 mb-3">Configuración de Página</h2>
+                        <p className="text-gray-500 font-medium leading-relaxed">
+                            Gestiona los banners promocionales y otros elementos visuales de la página principal.
+                        </p>
+                    </button>
                 </div>
             ) : (
                 <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
                     <div className="p-8 border-b border-gray-50 flex items-center gap-4">
-                        <div className={`p-3 rounded-2xl ${activeModule === 'inventory' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
-                            {activeModule === 'inventory' ? <FileSpreadsheet className="w-6 h-6" /> : <MapPin className="w-6 h-6" />}
+                        <div className={`p-3 rounded-2xl ${
+                            activeModule === 'inventory' ? 'bg-emerald-50 text-emerald-600' : 
+                            activeModule === 'zipcodes' ? 'bg-blue-50 text-blue-600' : 
+                            'bg-amber-50 text-amber-600'
+                        }`}>
+                            {activeModule === 'inventory' ? <FileSpreadsheet className="w-6 h-6" /> : 
+                             activeModule === 'zipcodes' ? <MapPin className="w-6 h-6" /> : 
+                             <Layout className="w-6 h-6" />}
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-gray-900">
-                                {activeModule === 'inventory' ? 'Sincronización de Inventario' : 'Importación de Códigos Postales'}
+                                {activeModule === 'inventory' ? 'Sincronización de Inventario' : 
+                                 activeModule === 'zipcodes' ? 'Importación de Códigos Postales' : 
+                                 'Configuración de Banners'}
                             </h2>
-                            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">{fileName || 'Esperando archivo...'}</p>
+                            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">
+                                {activeModule === 'page_config' ? 'Gestión Dinámica de Banners' : (fileName || 'Esperando archivo...')}
+                            </p>
                         </div>
                     </div>
 
@@ -348,7 +373,11 @@ export function SystemSettings() {
                             </div>
                         )}
 
-                        {step === 'upload' && (
+                        {activeModule === 'page_config' ? (
+                            <BannerManager />
+                        ) : (
+                            <>
+                                {step === 'upload' && (
                             <div className="flex flex-col items-center justify-center p-20 border-2 border-dashed border-gray-100 hover:border-blue-400 hover:bg-blue-50/30 rounded-[2rem] transition-all group cursor-pointer relative">
                                 <input
                                     type="file"
@@ -445,6 +474,8 @@ export function SystemSettings() {
                                     Realizar otra operación
                                 </button>
                             </div>
+                        )}
+                    </>
                         )}
                     </div>
                 </div>

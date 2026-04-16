@@ -272,7 +272,7 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
                 Productos
                 <svg className="w-3.5 h-3.5 ml-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
               </Link>
-              <Link to="/proximamente" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
+              <Link to="/nosotros" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
                 Nosotros
               </Link>
               <Link to="/favoritos" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full gap-1.5">

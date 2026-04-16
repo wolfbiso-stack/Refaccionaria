@@ -100,6 +100,26 @@ export function CotizadorView() {
                 }
             }
             
+            // 3. Enviar Correo al Administrador vía Edge Function
+            console.log('Iniciando envío de correo con datos:', { folio, items: pdfItems });
+            try {
+                const { data: functionData, error: functionError } = await supabase.functions.invoke('send-quote-email', {
+                    body: {
+                        folio: folio,
+                        profile: profile,
+                        items: pdfItems
+                    }
+                });
+
+                if (functionError) {
+                    console.error('Error reportado por Supabase Function:', functionError);
+                } else {
+                    console.log('Respuesta de la función exitosa:', functionData);
+                }
+            } catch (emailErr) {
+                console.error('Error crítico al invocar la función de correo:', emailErr);
+            }
+            
             // Limpiar el carrito tras generar la cotización
             clearCart();
         } catch (err) {

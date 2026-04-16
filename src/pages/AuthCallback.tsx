@@ -8,24 +8,33 @@ interface AuthCallbackProps {
 }
 
 export default function AuthCallback({ onDone }: AuthCallbackProps) {
-  const [status, setStatus] = useState<Status>("loading");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [status, setStatus] = useState<Status>(() => {
+    // Check for debug parameter in URL: ?debug=success | error | loading
+    const params = new URLSearchParams(window.location.search);
+    const debug = params.get("debug");
+    if (debug === "success" || debug === "error" || debug === "loading") {
+      return debug as Status;
+    }
+    return "loading";
+  });
+  const [errorMsg, setErrorMsg] = useState("Ocurrió un error inesperado.");
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("debug")) return; // Skip logic if in debug mode
+
     let redirectTimer: ReturnType<typeof setTimeout>;
 
     // El cliente de Supabase intercambia automáticamente el ?code= al cargar.
-    // Escuchamos SIGNED_IN / USER_UPDATED que se disparan al confirmar el email.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "USER_UPDATED") {
         setStatus("success");
-        // Limpia el ?code= de la URL sin recargar la página
         window.history.replaceState({}, document.title, window.location.pathname + window.location.hash.split("?")[0]);
         redirectTimer = setTimeout(() => onDone(), 3500);
       }
     });
 
-    // Fallback: si después de 8 segundos no hay sesión → error
+    // Fallback logic
     const fallback = setTimeout(async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -38,7 +47,7 @@ export default function AuthCallback({ onDone }: AuthCallbackProps) {
     }, 8000);
 
     return () => {
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
       clearTimeout(fallback);
       clearTimeout(redirectTimer);
     };
@@ -53,10 +62,11 @@ export default function AuthCallback({ onDone }: AuthCallbackProps) {
       flexDirection: "column",
       justifyContent: "center",
       alignItems: "center",
-      background: "#ffffff",
+      background: "#fdc401", // Caterpillar Yellow
       fontFamily: "'Inter', 'Arial', sans-serif",
       textAlign: "center",
       padding: "2rem",
+      color: "#111827",
     }}>
 
       {status === "loading" && (
@@ -67,16 +77,16 @@ export default function AuthCallback({ onDone }: AuthCallbackProps) {
           `}</style>
           <div style={{
             width: 64, height: 64,
-            border: "5px solid #f0f0f0",
-            borderTop: "5px solid #fdc401",
+            border: "5px solid rgba(0,0,0,0.1)",
+            borderTop: "5px solid #111827",
             borderRadius: "50%",
             animation: "spin 0.9s linear infinite",
             marginBottom: "1.5rem",
           }} />
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#1a1a1a", marginBottom: "0.5rem", animation: "fadeIn 0.5s ease" }}>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#111827", marginBottom: "0.5rem", animation: "fadeIn 0.5s ease" }}>
             Activando tu cuenta...
           </h1>
-          <p style={{ color: "#6b7280", fontSize: "1rem" }}>Por favor espera un momento.</p>
+          <p style={{ color: "#374151", fontSize: "1rem", fontWeight: 500 }}>Por favor espera un momento.</p>
         </>
       )}
 
@@ -89,14 +99,17 @@ export default function AuthCallback({ onDone }: AuthCallbackProps) {
           `}</style>
           <div style={{
             width: 90, height: 90,
-            background: "linear-gradient(135deg, #fdc401 0%, #f59e0b 100%)",
+            background: "#111827",
             borderRadius: "50%",
             display: "flex", alignItems: "center", justifyContent: "center",
             marginBottom: "1.5rem",
-            boxShadow: "0 12px 40px rgba(253,196,1,0.4)",
-            fontSize: "2.8rem",
+            boxShadow: "0 12px 40px rgba(0,0,0,0.2)",
             animation: "popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards",
-          }}>✅</div>
+          }}>
+            <svg width="48" height="48" fill="none" stroke="#fdc401" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          </div>
 
           <h1 style={{
             fontSize: "2rem", fontWeight: 800, color: "#111827",
@@ -106,21 +119,21 @@ export default function AuthCallback({ onDone }: AuthCallbackProps) {
             ¡Cuenta activada correctamente!
           </h1>
           <p style={{
-            color: "#6b7280", fontSize: "1rem", marginBottom: "2rem",
+            color: "#374151", fontSize: "1rem", marginBottom: "2rem", fontWeight: 500,
             animation: "fadeSlideUp 0.5s ease 0.45s both",
           }}>
-            Bienvenido/a a Córdoba Refacciones.
+            Bienvenido/a a Cordobesa Refacciones.
           </p>
 
           <div style={{
             display: "flex", alignItems: "center", gap: "0.6rem",
-            background: "#f9fafb", border: "1px solid #e5e7eb",
+            background: "rgba(0,0,0,0.06)", border: "1px solid rgba(0,0,0,0.1)",
             borderRadius: "999px", padding: "0.6rem 1.4rem",
-            color: "#9ca3af", fontSize: "0.875rem",
+            color: "#111827", fontSize: "0.875rem", fontWeight: 700,
             animation: "fadeSlideUp 0.5s ease 0.6s both",
           }}>
             <span style={{
-              width: 8, height: 8, background: "#fdc401",
+              width: 8, height: 8, background: "#111827",
               borderRadius: "50%", display: "inline-block",
               animation: "pulse 1.2s ease-in-out infinite",
             }} />
@@ -132,21 +145,24 @@ export default function AuthCallback({ onDone }: AuthCallbackProps) {
       {status === "error" && (
         <>
           <div style={{ fontSize: "3.5rem", marginBottom: "1rem" }}>⚠️</div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "#dc2626", marginBottom: "0.75rem" }}>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "#111827", marginBottom: "0.75rem" }}>
             No pudimos verificar tu cuenta
           </h1>
-          <p style={{ color: "#6b7280", fontSize: "1rem", marginBottom: "2rem", maxWidth: 380 }}>
+          <p style={{ color: "#374151", fontSize: "1rem", marginBottom: "2rem", maxWidth: 380, fontWeight: 500 }}>
             {errorMsg}
           </p>
           <button
             onClick={onDone}
             style={{
               padding: "0.75rem 2.5rem",
-              background: "#fdc401", color: "#111827",
+              background: "#111827", color: "#fdc401",
               border: "none", borderRadius: "999px",
-              fontWeight: 700, fontSize: "1rem", cursor: "pointer",
-              boxShadow: "0 4px 16px rgba(253,196,1,0.3)",
+              fontWeight: 800, fontSize: "1rem", cursor: "pointer",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
+              transition: "transform 0.2s",
             }}
+            onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+            onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
           >
             Ir al inicio →
           </button>

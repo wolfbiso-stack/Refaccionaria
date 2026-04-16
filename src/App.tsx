@@ -23,6 +23,8 @@ import { WhatsAppButton } from './components/WhatsAppButton';
 import { ClipboardList } from 'lucide-react';
 import { FavoritesView } from './components/FavoritesView';
 import AuthCallback from './pages/AuthCallback';
+import { BannerCarousel } from './components/BannerCarousel';
+import { NosotrosView } from './components/NosotrosView';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -32,9 +34,12 @@ function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const [isCartOpen, setIsCartOpen] = useState(false);
-  // Detecta si Supabase redirigió aquí con un código de confirmación de email
+  // Detecta si Supabase redirigió aquí con un código de confirmación de email o si estamos en debug
   const [isEmailCallback, setIsEmailCallback] = useState(
-    () => new URLSearchParams(window.location.search).has('code')
+    () => {
+      const params = new URLSearchParams(window.location.search);
+      return params.has('code') || params.has('debug');
+    }
   );
 
   const openAuthModal = (mode: 'login' | 'signup' = 'login') => {
@@ -105,20 +110,14 @@ function App() {
           <Routes>
             <Route path="/" element={
               <>
-                {/* Banner Promocional */}
-                <div className="mb-10 max-w-4xl mx-auto w-full overflow-hidden shadow-sm border border-gray-100">
-                  <img 
-                    src="/banner.png" 
-                    alt="Banner Promocional" 
-                    className="w-full h-auto object-contain hover:opacity-95 transition-opacity cursor-pointer"
-                  />
-                </div>
+                {/* Carrusel de Banners Dinámicos */}
+                <BannerCarousel />
 
                 {/* Banner de Productos (Compact Strip) - Pegado al catálogo */}
                 <div className="mb-0 w-full max-w-4xl mx-auto overflow-hidden relative h-[50px] sm:h-[70px] lg:h-[90px] shadow-sm bg-transparent rounded-2xl">
-                  <img 
-                    src="/productos.png" 
-                    alt="Productos" 
+                  <img
+                    src="/productos.png"
+                    alt="Productos"
                     className="absolute inset-0 w-full h-full object-cover object-center drop-shadow-sm"
                   />
                 </div>
@@ -129,20 +128,19 @@ function App() {
                   userId={session?.user?.id}
                   onRequireLogin={() => openAuthModal('login')}
                 />
-                
-                {/* Sección de Proveedores */}
-                <section className="mt-20 mb-12 border-t border-gray-100 pt-16">
-                  <div className="text-center mb-12">
-                    <h2 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tighter uppercase mb-4">Nuestros Proveedores</h2>
-                    <div className="w-24 h-1.5 bg-[#fdc401] mx-auto rounded-full"></div>
+
+                {/* Sección de Proveedores - Refinada y más pequeña */}
+                <section className="mt-12 mb-12 border-t border-gray-50 pt-10">
+                  <div className="text-center mb-8">
+                    <h2 className="text-xl lg:text-2xl font-black text-gray-800 tracking-tight uppercase mb-2">Nuestras Marcas</h2>
+                    <div className="w-12 h-1 bg-[#fdc401] mx-auto rounded-full opacity-60"></div>
                   </div>
-                  <div className="relative group max-w-5xl mx-auto">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-amber-100 to-amber-50 blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                    <div className="relative bg-white p-4 shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-                      <img 
-                        src="/proveedores.png" 
-                        alt="Nuestros Proveedores" 
-                        className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-[1.02]"
+                  <div className="relative group max-w-3xl mx-auto px-4">
+                    <div className="relative bg-gray-50/50 backdrop-blur-sm p-4 rounded-3xl border border-gray-100 overflow-hidden transition-all hover:bg-white hover:shadow-md">
+                      <img
+                        src="/proveedores.png"
+                        alt="Nuestros Proveedores"
+                        className="w-full h-auto object-contain opacity-80 group-hover:opacity-100 transition-all duration-500"
                       />
                     </div>
                   </div>
@@ -203,6 +201,7 @@ function App() {
               )
             } />
             <Route path="/sucursales" element={<SucursalesView />} />
+            <Route path="/nosotros" element={<NosotrosView />} />
             <Route path="/ayuda-contacto" element={<HelpContactView />} />
             <Route path="/cotizador" element={
               isAuthenticated ? <CotizadorView /> : (
@@ -229,7 +228,7 @@ function App() {
               )
             } />
             <Route path="/proximamente" element={<ComingSoon />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/auth/callback" element={<AuthCallback onDone={() => window.location.href = '/'} />} />
           </Routes>
         </main>
 

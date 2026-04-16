@@ -204,7 +204,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
           <p className="text-gray-400 font-bold italic">No se encontraron productos en esta sección.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-6">
           {products.map((product) => (
             <ProductSmallCard
               key={product.id}

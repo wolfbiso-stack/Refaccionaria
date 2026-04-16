@@ -17,7 +17,7 @@ export function Footer() {
           <div>
             <h3 className="text-[#fdc401] font-bold mb-4 text-lg uppercase tracking-wider">Cordobesa Refacciones</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="font-bold text-gray-800 hover:text-[#fdc401] transition-colors text-sm">Nosotros</a></li>
+              <li><Link to="/nosotros" className="font-bold text-gray-800 hover:text-[#fdc401] transition-colors text-sm">Nosotros</Link></li>
               <li><a href="#" className="font-bold text-gray-800 hover:text-[#fdc401] transition-colors text-sm">Aviso de Privacidad</a></li>
               <li><Link to="/sucursales" className="font-bold text-gray-800 hover:text-[#fdc401] transition-colors text-sm">Sucursales</Link></li>
             </ul>
