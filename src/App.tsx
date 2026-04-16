@@ -34,13 +34,11 @@ function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const [isCartOpen, setIsCartOpen] = useState(false);
-  // Detecta si Supabase redirigió aquí con un código de confirmación de email o si estamos en debug
-  const [isEmailCallback, setIsEmailCallback] = useState(
-    () => {
-      const params = new URLSearchParams(window.location.search);
-      return params.has('code') || params.has('debug');
-    }
-  );
+
+  const [isEmailCallback, setIsEmailCallback] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.has('code') || params.has('debug');
+  });
 
   const openAuthModal = (mode: 'login' | 'signup' = 'login') => {
     setAuthModalMode(mode);
@@ -49,7 +47,12 @@ function App() {
 
   const fetchUserInfo = async (userId: string) => {
     try {
-      const { data, error } = await supabase.from('user_profiles').select('*').eq('id', userId).single();
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
       if (!error && data) {
         setUserRole(data.role as 'admin' | 'empleado' | 'usuario');
         setUserProfile(data);
@@ -86,12 +89,25 @@ function App() {
 
   const isAuthenticated = !!session;
 
+  // 🔥 CONTROL DE PRODUCCIÓN
+  const isProduction = import.meta.env.MODE === "production";
+
+  // 👉 Si es producción, mostrar ComingSoon
+  if (isProduction) {
+    return (
+      <div className="min-h-screen bg-[#0f1115]">
+        <ComingSoon />
+      </div>
+    );
+  }
+
+  // 👉 En desarrollo, mostrar toda la app
   return (
     <CartProvider>
-      {/* Overlay de confirmación de email — aparece si Supabase redirigió con ?code= */}
       {isEmailCallback && (
         <AuthCallback onDone={() => setIsEmailCallback(false)} />
       )}
+
       <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
         <Header
           onOpenSidebar={() => setIsSidebarOpen(true)}
@@ -103,6 +119,7 @@ function App() {
           onLogoutClick={handleLogout}
           onOpenCart={() => setIsCartOpen(true)}
         />
+
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
@@ -110,10 +127,8 @@ function App() {
           <Routes>
             <Route path="/" element={
               <>
-                {/* Carrusel de Banners Dinámicos */}
                 <BannerCarousel />
 
-                {/* Banner de Productos (Compact Strip) - Pegado al catálogo */}
                 <div className="mb-0 w-full max-w-4xl mx-auto overflow-hidden relative h-[50px] sm:h-[70px] lg:h-[90px] shadow-sm bg-transparent rounded-2xl">
                   <img
                     src="/productos.png"
@@ -129,12 +144,14 @@ function App() {
                   onRequireLogin={() => openAuthModal('login')}
                 />
 
-                {/* Sección de Proveedores - Refinada y más pequeña */}
                 <section className="mt-12 mb-12 border-t border-gray-50 pt-10">
                   <div className="text-center mb-8">
-                    <h2 className="text-xl lg:text-2xl font-black text-gray-800 tracking-tight uppercase mb-2">Nuestras Marcas</h2>
+                    <h2 className="text-xl lg:text-2xl font-black text-gray-800 tracking-tight uppercase mb-2">
+                      Nuestras Marcas
+                    </h2>
                     <div className="w-12 h-1 bg-[#fdc401] mx-auto rounded-full opacity-60"></div>
                   </div>
+
                   <div className="relative group max-w-3xl mx-auto px-4">
                     <div className="relative bg-gray-50/50 backdrop-blur-sm p-4 rounded-3xl border border-gray-100 overflow-hidden transition-all hover:bg-white hover:shadow-md">
                       <img
@@ -147,6 +164,7 @@ function App() {
                 </section>
               </>
             } />
+
             <Route path="/favoritos" element={
               <FavoritesView
                 isAuthenticated={isAuthenticated}
@@ -154,6 +172,7 @@ function App() {
                 onRequireLogin={() => openAuthModal('login')}
               />
             } />
+
             <Route path="/producto/:id" element={
               <ProductDetail
                 isAuthenticated={isAuthenticated}
@@ -162,6 +181,7 @@ function App() {
                 onRequireLogin={() => openAuthModal('login')}
               />
             } />
+
             <Route path="/perfil" element={
               isAuthenticated ? <UserProfileView /> : (
                 <div className="text-center py-20 px-4">
@@ -176,6 +196,7 @@ function App() {
                 </div>
               )
             } />
+
             <Route path="/dashboard" element={
               userRole === 'admin' || userRole === 'empleado' ? <Dashboard /> : (
                 <div className="text-center py-20 px-4">
@@ -184,49 +205,29 @@ function App() {
                 </div>
               )
             } />
+
             <Route path="/empleados" element={
               userRole === 'admin' ? <EmployeeManagement /> : (
                 <div className="text-center py-20 px-4">
                   <h1 className="text-2xl font-bold text-red-600">Acceso Denegado</h1>
-                  <p className="text-gray-500 mt-2">Solo un Administrador puede gestionar el personal y usuarios.</p>
+                  <p className="text-gray-500 mt-2">Solo un Administrador puede gestionar el personal.</p>
                 </div>
               )
             } />
+
             <Route path="/configuracion" element={
               userRole === 'admin' ? <SystemSettings /> : (
                 <div className="text-center py-20 px-4">
                   <h1 className="text-2xl font-bold text-red-600">Acceso Denegado</h1>
-                  <p className="text-gray-500 mt-2">Acceso restringido a la configuración global del sistema.</p>
+                  <p className="text-gray-500 mt-2">Acceso restringido.</p>
                 </div>
               )
             } />
+
             <Route path="/sucursales" element={<SucursalesView />} />
             <Route path="/nosotros" element={<NosotrosView />} />
             <Route path="/ayuda-contacto" element={<HelpContactView />} />
-            <Route path="/cotizador" element={
-              isAuthenticated ? <CotizadorView /> : (
-                <div className="max-w-3xl mx-auto py-20 px-6 text-center bg-white rounded-[2.5rem] shadow-sm border border-gray-100 animate-in fade-in zoom-in duration-500">
-                  <div className="w-20 h-20 bg-[#fdc401]/10 rounded-full flex items-center justify-center mx-auto mb-8 border-4 border-white shadow-xl shadow-[#fdc401]/10">
-                    <ClipboardList className="w-10 h-10 text-[#fdc401]" />
-                  </div>
-                  <h1 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">¡Ya casi tienes tu cotización lista!</h1>
-                  <p className="text-gray-500 mb-10 max-w-md mx-auto font-bold leading-relaxed opacity-80">
-                    Para generar el documento formal en PDF y guardar tus datos para futuras compras, necesitamos que inicies sesión o crees una cuenta gratuita.
-                  </p>
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <button
-                      onClick={() => openAuthModal('login')}
-                      className="w-full sm:w-auto px-10 py-5 bg-[#fdc401] text-black rounded-2xl font-black shadow-xl shadow-[#fdc401]/20 hover:bg-[#cc9e01] transition-all active:scale-95 flex items-center justify-center gap-3"
-                    >
-                      Iniciar Sesión / Registrarse
-                    </button>
-                    <Link to="/" className="w-full sm:w-auto px-10 py-5 bg-gray-50 text-gray-500 rounded-2xl font-black hover:bg-gray-100 transition-all active:scale-95">
-                      Ver Catálogo
-                    </Link>
-                  </div>
-                </div>
-              )
-            } />
+            <Route path="/cotizador" element={<CotizadorView />} />
             <Route path="/proximamente" element={<ComingSoon />} />
             <Route path="/auth/callback" element={<AuthCallback onDone={() => window.location.href = '/'} />} />
           </Routes>
