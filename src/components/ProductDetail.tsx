@@ -17,7 +17,6 @@ interface Product {
   name: string;
   brand?: string;
   description: string;
-  category?: string;
   sku?: string;
   slug?: string;
   stock: number;
@@ -278,11 +277,7 @@ export function ProductDetail({ isAuthenticated = false, userRole = null, userId
                 <p className="font-bold text-gray-700">
                   Número de Parte: <span className="text-[#fdc401]">{sku}</span>
                 </p>
-                {product.category && (
-                  <p className="font-bold text-gray-700 border-l border-gray-200 pl-6">
-                    Categoría: <span className="text-[#fdc401]">{product.category}</span>
-                  </p>
-                )}
+                {/* Category display removed */}
               </div>
 
               <div className="border-t border-gray-50 pt-5 mb-5">

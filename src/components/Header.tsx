@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Menu, ClipboardList, ShoppingCart, User, Heart } from 'lucide-react';
+import { ClipboardList, ShoppingCart, User, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 interface HeaderProps {
-  onOpenSidebar: () => void;
   isAuthenticated: boolean;
   userRole?: 'admin' | 'empleado' | 'usuario' | null;
   userProfile?: any;
@@ -15,7 +14,7 @@ interface HeaderProps {
   onOpenCart: () => void;
 }
 
-export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, email, onLoginClick, onLogoutClick, onOpenCart }: HeaderProps) {
+export function Header({ isAuthenticated, userRole, userProfile, email, onLoginClick, onLogoutClick, onOpenCart }: HeaderProps) {
   const { totalItems } = useCart();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -237,40 +236,13 @@ export function Header({ onOpenSidebar, isAuthenticated, userRole, userProfile, 
         <div className="max-w-[1700px] mx-auto">
           <div className="flex flex-col lg:flex-row items-center border-t border-[#1a1a1a]/10">
 
-            {/* Categories Button (Left) */}
-            <div className="w-full lg:w-auto hidden lg:flex items-center h-[46px] lg:h-[50px] px-4">
-              <button
-                onClick={onOpenSidebar}
-                className="h-full flex items-center gap-3 hover:opacity-80 transition-opacity text-[#1a1a1a] group"
-              >
-                <Menu className="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity" strokeWidth={2} />
-                <span className="text-[14px] font-bold tracking-tight">Todas las Categorías</span>
-              </button>
-              <div className="h-5 w-[1px] bg-[#1a1a1a]/20 ml-6 mr-2"></div>
-            </div>
-
-            {/* Mobile Categories Toggle */}
-            <div className="w-full lg:hidden border-b border-[#1a1a1a]/10">
-              <button
-                onClick={onOpenSidebar}
-                className="w-full h-[46px] px-4 flex items-center justify-start hover:bg-black/5 transition-colors text-[#1a1a1a]"
-              >
-                <div className="flex items-center space-x-3">
-                  <Menu className="w-5 h-5 opacity-80" strokeWidth={2} />
-                  <span className="text-[14px] font-bold">Menú Principal</span>
-                </div>
-              </button>
-            </div>
-
             {/* Nav Links (Middle) */}
-            <div className="w-full lg:flex-1 px-4 lg:px-2 flex items-center justify-center lg:justify-start space-x-8 h-[46px] lg:h-[50px] overflow-x-auto no-scrollbar relative">
+            <div className="w-full lg:flex-1 px-4 sm:px-6 lg:px-12 flex items-center justify-center lg:justify-start space-x-8 h-[46px] lg:h-[50px] overflow-x-auto no-scrollbar relative">
               <Link to="/" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
                 Inicio
-                <svg className="w-3.5 h-3.5 ml-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
               </Link>
               <Link to="/" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
                 Productos
-                <svg className="w-3.5 h-3.5 ml-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
               </Link>
               <Link to="/nosotros" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
                 Nosotros

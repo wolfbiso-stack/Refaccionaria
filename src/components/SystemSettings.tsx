@@ -31,7 +31,6 @@ interface InsertItem {
     description?: string;
     sku: string;
     stock: number;
-    category: string;
     slug: string;
     user_id?: string;
 }
@@ -173,17 +172,16 @@ export function SystemSettings() {
             const dbSkuUpperSet = new Set(dbProducts.map(p => p.sku.toUpperCase()));
             excelSkuMap.forEach((ex, skuUpper) => {
                 if (!dbSkuUpperSet.has(skuUpper)) {
-                    let nameVal = '', descVal = '', catVal = 'Sin Categoría';
+                    let nameVal = '', descVal = '';
                     for (const [key, val] of Object.entries(ex.originalRow)) {
                         const upperKey = key.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                         if (upperKey.includes('NOMBRE') || upperKey.includes('PRODUCTO') || upperKey.includes('DESCRIPCION')) nameVal = descVal = String(val).trim();
-                        else if (upperKey.includes('CATEGOR') || upperKey.includes('FAMILIA')) catVal = String(val).trim() || 'Sin Categoría';
                     }
                     if (!nameVal) nameVal = descVal = `Producto ${ex.sku}`;
                     let slugVal = generateSlug(nameVal, ex.sku), attempt = 1;
                     while (dbSlugSet.has(slugVal)) { slugVal = `${generateSlug(nameVal, ex.sku)}-${attempt}`; attempt++; }
                     dbSlugSet.add(slugVal);
-                    toInsert.push({ id: `new-${toInsert.length}`, name: nameVal, description: descVal, sku: ex.sku, stock: ex.stock, category: catVal, slug: slugVal, user_id: currentUserId });
+                    toInsert.push({ id: `new-${toInsert.length}`, name: nameVal, description: descVal, sku: ex.sku, stock: ex.stock, slug: slugVal, user_id: currentUserId });
                 }
             });
 

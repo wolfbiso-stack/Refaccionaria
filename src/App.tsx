@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import { Header } from './components/Header';
 import { LoginModal } from './components/LoginModal';
-import { Sidebar } from './components/Sidebar';
 import { ProductGrid } from './components/ProductGrid';
 import { ProductDetail } from './components/ProductDetail';
 import { Dashboard } from './components/Dashboard';
@@ -20,7 +19,7 @@ import { CotizadorView } from './components/CotizadorView';
 import { HelpContactView } from './components/HelpContactView';
 import { CartToast } from './components/CartToast';
 import { WhatsAppButton } from './components/WhatsAppButton';
-import { ClipboardList } from 'lucide-react';
+
 import { FavoritesView } from './components/FavoritesView';
 import AuthCallback from './pages/AuthCallback';
 import ActivarCuenta from './pages/ActivarCuenta';
@@ -28,7 +27,6 @@ import { BannerCarousel } from './components/BannerCarousel';
 import { NosotrosView } from './components/NosotrosView';
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<'admin' | 'empleado' | 'usuario' | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -111,7 +109,6 @@ function App() {
 
       <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
         <Header
-          onOpenSidebar={() => setIsSidebarOpen(true)}
           isAuthenticated={isAuthenticated}
           userRole={userRole}
           userProfile={userProfile}
@@ -121,7 +118,6 @@ function App() {
           onOpenCart={() => setIsCartOpen(true)}
         />
 
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
         <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-8">

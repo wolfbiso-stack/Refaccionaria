@@ -7,7 +7,6 @@ interface Product {
   id?: string;
   name: string;
   brand?: string;
-  category?: string;
   sku?: string;
   slug?: string;
   description: string;
@@ -30,7 +29,6 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
   const [formData, setFormData] = useState({
     name: '',
     brand: '',
-    category: '',
     sku: '',
     description: '',
     stock: 0,
@@ -46,14 +44,13 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
         setFormData({
           name: initialProduct.name,
           brand: initialProduct.brand || '',
-          category: initialProduct.category || '',
           sku: initialProduct.sku || '',
           description: initialProduct.description || '',
           stock: initialProduct.stock,
           images: initialImages,
         });
       } else {
-        setFormData({ name: '', brand: '', category: '', sku: '', description: '', stock: 0, images: [] });
+        setFormData({ name: '', brand: '', sku: '', description: '', stock: 0, images: [] });
       }
       setError(null);
     }
@@ -99,7 +96,6 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
       const productPayload = {
         name: formData.name,
         brand: formData.brand || null,
-        category: formData.category || null,
         sku: formData.sku,
         slug: slug,
         description: formData.description || null,
@@ -125,7 +121,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
       }
 
       // Success
-      setFormData({ name: '', brand: '', category: '', sku: '', description: '', stock: 0, images: [] });
+      setFormData({ name: '', brand: '', sku: '', description: '', stock: 0, images: [] });
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -221,26 +217,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                    Categoría
-                  </label>
-                  <select
-                    id="category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm bg-white"
-                  >
-                    <option value="">Ninguna</option>
-                    <option value="Frenos">Frenos</option>
-                    <option value="Suspensión">Suspensión</option>
-                    <option value="Motor">Motor</option>
-                    <option value="Eléctrico">Eléctrico</option>
-                    <option value="Filtros">Filtros</option>
-                    <option value="Accesorios">Accesorios</option>
-                  </select>
-                </div>
+                {/* Category field removed */}
 
                 <div>
                   <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">
