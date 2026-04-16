@@ -69,6 +69,7 @@ export function EmployeeFormModal({ isOpen, onClose, onSuccess, initialEmployee 
                     email: formData.email,
                     password: formData.password,
                     options: {
+                        emailRedirectTo: window.location.origin,
                         data: {
                             role: formData.role
                         }

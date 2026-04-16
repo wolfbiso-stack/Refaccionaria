@@ -23,6 +23,7 @@ import { WhatsAppButton } from './components/WhatsAppButton';
 import { ClipboardList } from 'lucide-react';
 import { FavoritesView } from './components/FavoritesView';
 import AuthCallback from './pages/AuthCallback';
+import ActivarCuenta from './pages/ActivarCuenta';
 import { BannerCarousel } from './components/BannerCarousel';
 import { NosotrosView } from './components/NosotrosView';
 
@@ -230,6 +231,7 @@ function App() {
             <Route path="/cotizador" element={<CotizadorView />} />
             <Route path="/proximamente" element={<ComingSoon />} />
             <Route path="/auth/callback" element={<AuthCallback onDone={() => window.location.href = '/'} />} />
+            <Route path="/activar" element={<ActivarCuenta />} />
           </Routes>
         </main>
 
