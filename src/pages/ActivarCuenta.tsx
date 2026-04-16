@@ -11,9 +11,9 @@ export default function ActivarCuenta() {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
     if (token && type && supabaseUrl) {
-      // El endpoint GET de Supabase requiere estrictamente que el parámetro
-      // se llame "token", sin importar si el valor es un PKCE hash o un JWT clásico.
-      const verifyUrl = `${supabaseUrl}/auth/v1/verify?token=${token}&type=${type}&redirect_to=${window.location.origin}/`;
+      // IMPORTANTE: En el esquema PKCE de Supabase 2.0, la API de verificación
+      // requiere EXPRESAMENTE que el parámetro se llame "token_hash".
+      const verifyUrl = `${supabaseUrl}/auth/v1/verify?token_hash=${token}&type=${type}&redirect_to=${window.location.origin}/`;
       
       // Redirigimos físicamente a Supabase
       window.location.href = verifyUrl;
