@@ -3,23 +3,23 @@ import { MapPin, Phone, Clock, ExternalLink, Navigation } from 'lucide-react';
 export function SucursalesView() {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Hero Section */}
-            <div className="relative mb-12 rounded-[2.5rem] overflow-hidden bg-amber-500 p-12 lg:p-20 text-amber-950">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400 rounded-full -mr-20 -mt-20 opacity-40 blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-600 rounded-full -ml-10 -mb-10 opacity-20 blur-2xl"></div>
+            {/* Hero Section - More compact and elegant */}
+            <div className="relative mb-8 lg:mb-12 rounded-[2rem] lg:rounded-[3rem] overflow-hidden bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 p-8 lg:p-14 text-amber-950 shadow-xl shadow-amber-900/5">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-white/20 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-900/10 rounded-full -ml-8 -mb-8 blur-2xl"></div>
 
                 <div className="relative z-10 max-w-3xl">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="bg-amber-950/10 p-2 rounded-lg">
-                            <MapPin className="w-6 h-6" />
+                    <div className="flex items-center gap-3 mb-4 lg:mb-6">
+                        <div className="bg-amber-950/10 p-1.5 rounded-lg">
+                            <MapPin className="w-5 h-5 lg:w-6 lg:h-6" />
                         </div>
-                        <span className="font-black uppercase tracking-[0.2em] text-sm">Nuestras Oficinas</span>
+                        <span className="font-black uppercase tracking-[0.2em] text-[10px] lg:text-xs">Nuestras Oficinas</span>
                     </div>
-                    <h1 className="text-5xl lg:text-7xl font-black tracking-tighter mb-8 leading-none italic">
+                    <h1 className="text-4xl lg:text-6xl font-black tracking-tighter mb-4 lg:mb-6 leading-none uppercase italic">
                         Visita nuestra <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-950 to-amber-800">Sucursal Matriz</span>
+                        <span className="text-amber-950/90">Sucursal</span>
                     </h1>
-                    <p className="text-lg lg:text-xl font-bold opacity-80 max-w-xl leading-relaxed">
+                    <p className="text-sm lg:text-base font-bold opacity-90 max-w-xl leading-relaxed">
                         Estamos ubicados estratégicamente para brindarte el mejor servicio y las mejores refacciones de la región. ¡Ven a conocernos!
                     </p>
                 </div>

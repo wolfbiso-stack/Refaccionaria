@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import { Header } from './components/Header';
@@ -38,6 +38,12 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     return params.has('code') || params.has('debug');
   });
+
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   const openAuthModal = (mode: 'login' | 'signup' = 'login') => {
     setAuthModalMode(mode);
