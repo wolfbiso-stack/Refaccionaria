@@ -89,10 +89,16 @@ function App() {
   const isAuthenticated = !!session;
 
   // 🔥 CONTROL DE PRODUCCIÓN
+  // Marcamos como "Coming Soon" solo si es un entorno de producción REAL 
+  // y NO es un dominio de previsualización de Vercel (que contienen '-git-')
   const isProduction = import.meta.env.MODE === "production";
+  const isDevDeployment = typeof window !== 'undefined' && (
+    window.location.hostname.includes('localhost') || 
+    window.location.hostname.includes('-git-')
+  );
 
-  // 👉 Si es producción, mostrar ComingSoon
-  if (isProduction) {
+  // 👉 Si es producción y NO es desarrollo/preview, mostrar ComingSoon
+  if (isProduction && !isDevDeployment) {
     return (
       <div className="min-h-screen bg-[#0f1115]">
         <ComingSoon />
