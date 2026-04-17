@@ -24,9 +24,10 @@ interface ProductGridProps {
   userRole?: 'admin' | 'empleado' | 'usuario' | null;
   userId?: string;
   onRequireLogin?: () => void;
+  limit?: number;
 }
 
-export function ProductGrid({ isAuthenticated = false, userRole = null, userId, onRequireLogin }: ProductGridProps) {
+export function ProductGrid({ isAuthenticated = false, userRole = null, userId, onRequireLogin, limit }: ProductGridProps) {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [searchParams] = useSearchParams();
@@ -87,7 +88,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
     }
   };
 
-  const ITEMS_PER_PAGE = 15;
+  const ITEMS_PER_PAGE = limit || 15;
 
   const canManageProducts = userRole === 'admin' || userRole === 'empleado';
 
@@ -220,7 +221,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
         </div>
       )}
 
-      {!loading && totalPages > 1 && (
+      {!loading && totalPages > 1 && !limit && (
         <div className="flex justify-center items-center mt-12 py-8 gap-6">
           <button
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}

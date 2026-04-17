@@ -151,6 +151,7 @@ function App() {
                   userRole={userRole}
                   userId={session?.user?.id}
                   onRequireLogin={() => openAuthModal('login')}
+                  limit={10}
                 />
 
                 <section className="mt-12 mb-12 border-t border-gray-50 pt-10">
@@ -168,6 +169,30 @@ function App() {
                         alt="Nuestros Proveedores"
                         className="w-full h-auto object-contain opacity-80 group-hover:opacity-100 transition-all duration-500"
                       />
+                    </div>
+                  </div>
+                </section>
+
+                <section className="mt-12 mb-12 border-t border-gray-50 pt-10">
+                  <div className="text-center mb-8">
+                    <h2 className="text-xl lg:text-2xl font-black text-gray-800 tracking-tight uppercase mb-2">
+                      Nuestra Ubicación
+                    </h2>
+                    <div className="w-12 h-1 bg-[#fdc401] mx-auto rounded-full opacity-60"></div>
+                  </div>
+                  <div className="max-w-6xl mx-auto px-4 lg:px-6">
+                    <div className="bg-white rounded-[3rem] shadow-2xl shadow-amber-900/10 border-8 border-white overflow-hidden h-[400px] lg:h-[500px] relative group">
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3795.60265926858!2d-94.91237872413386!3d17.950677283035777!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85ea03991f890a95%3A0x7998fc66643a4eea!2sCordobesa%20Refacciones!5e0!3m2!1ses-419!2smx!4v1775369685487!5m2!1ses-419!2smx"
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            allowFullScreen={true}
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            title="Mapa de Sucursal Cordobesa Refacciones"
+                            className="grayscale hover:grayscale-0 transition-all duration-700 ease-out scale-105 group-hover:scale-100"
+                        ></iframe>
                     </div>
                   </div>
                 </section>
