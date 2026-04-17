@@ -25,6 +25,7 @@ import AuthCallback from './pages/AuthCallback';
 import ActivarCuenta from './pages/ActivarCuenta';
 import { BannerCarousel } from './components/BannerCarousel';
 import { NosotrosView } from './components/NosotrosView';
+import { ProductosView } from './components/ProductosView';
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -151,7 +152,7 @@ function App() {
                   userRole={userRole}
                   userId={session?.user?.id}
                   onRequireLogin={() => openAuthModal('login')}
-                  limit={10}
+                  limit={8}
                 />
 
                 <section className="mt-12 mb-12 border-t border-gray-50 pt-10">
@@ -259,6 +260,14 @@ function App() {
             } />
 
             <Route path="/sucursales" element={<SucursalesView />} />
+            <Route path="/productos" element={
+              <ProductosView
+                isAuthenticated={isAuthenticated}
+                userRole={userRole}
+                userId={session?.user?.id}
+                onRequireLogin={() => openAuthModal('login')}
+              />
+            } />
             <Route path="/nosotros" element={<NosotrosView />} />
             <Route path="/ayuda-contacto" element={<HelpContactView />} />
             <Route path="/cotizador" element={<CotizadorView />} />

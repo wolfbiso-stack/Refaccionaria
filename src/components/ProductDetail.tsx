@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useCart } from '../context/CartContext';
-import { ArrowLeft, Box, AlertTriangle, Trash2, ChevronLeft, ChevronRight, ShieldAlert, Minus, Plus, Heart } from 'lucide-react';
+import { ArrowLeft, Box, AlertTriangle, Trash2, ChevronLeft, ChevronRight, ShieldAlert, Minus, Plus, Heart, ShieldCheck } from 'lucide-react';
 import { ProductFormModal } from './ProductFormModal';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -321,7 +321,7 @@ export function ProductDetail({ isAuthenticated = false, userRole = null, userId
               </div>
 
               {/* Agregar a Favoritos */}
-              <div className="mb-8">
+              <div className="mb-6">
                 <button
                   onClick={toggleFavorite}
                   className={`flex items-center group gap-2 font-bold text-xs tracking-wide transition-colors ${isFavorite ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
@@ -329,6 +329,19 @@ export function ProductDetail({ isAuthenticated = false, userRole = null, userId
                   <Heart className={`w-4 h-4 transition-colors ${isFavorite ? 'text-red-500' : 'text-gray-300 group-hover:text-red-400'}`} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={2.5}/>
                   Agregar a favoritos
                 </button>
+              </div>
+
+              {/* Caja de Garantía */}
+              <div className="mb-8 bg-[#f8f9fa] rounded-xl p-4 sm:p-5 flex items-start gap-4 shadow-sm border border-gray-100/50">
+                <div className="mt-0.5">
+                  <ShieldCheck className="w-5 h-5 text-gray-900" />
+                </div>
+                <div>
+                  <p className="text-[13px] text-gray-600">
+                    <strong className="text-gray-900">Garantía contra defectos de fábrica:</strong> Tu producto está respaldado. <br className="hidden sm:block" />
+                    <span className="opacity-80 text-xs mt-1 inline-block">*Aplican Restricciones</span>
+                  </p>
+                </div>
               </div>
             </div>
 

@@ -241,7 +241,7 @@ export function Header({ isAuthenticated, userRole, userProfile, email, onLoginC
               <Link to="/" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
                 Inicio
               </Link>
-              <Link to="/" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
+              <Link to="/productos" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
                 Productos
               </Link>
               <Link to="/nosotros" className="flex items-center text-[14px] font-bold text-[#1a1a1a] hover:opacity-80 transition-opacity whitespace-nowrap h-full">
