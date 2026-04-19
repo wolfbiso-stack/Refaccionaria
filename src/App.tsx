@@ -272,7 +272,7 @@ function App() {
             <Route path="/ayuda-contacto" element={<HelpContactView />} />
             <Route path="/cotizador" element={<CotizadorView />} />
             <Route path="/proximamente" element={<ComingSoon />} />
-            <Route path="/auth/callback" element={<AuthCallback onDone={() => window.location.href = '/'} />} />
+            <Route path="/auth/callback" element={<AuthCallback onDone={(next) => window.location.href = next || '/'} />} />
             <Route path="/activar" element={<ActivarCuenta />} />
           </Routes>
         </main>

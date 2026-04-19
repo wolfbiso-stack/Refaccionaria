@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabase";
 type Status = "loading" | "success" | "error";
 
 interface AuthCallbackProps {
-  onDone: () => void;
+  onDone: (next?: string) => void;
 }
 
 export default function AuthCallback({ onDone }: AuthCallbackProps) {
@@ -17,7 +17,8 @@ export default function AuthCallback({ onDone }: AuthCallbackProps) {
     }
     return "loading";
   });
-  const [errorMsg, setErrorMsg] = useState("Ocurrió un error inesperado.");
+  const [errorMsg, setErrorMsg] = useState("El enlace es inválido o ha expirado.");
+  const [isRecovery, setIsRecovery] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -27,10 +28,17 @@ export default function AuthCallback({ onDone }: AuthCallbackProps) {
 
     // El cliente de Supabase intercambia automáticamente el ?code= al cargar.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecovery(true);
+      }
+      
+      if (event === "SIGNED_IN" || event === "USER_UPDATED" || event === "PASSWORD_RECOVERY") {
         setStatus("success");
-        window.history.replaceState({}, document.title, window.location.pathname + window.location.hash.split("?")[0]);
-        redirectTimer = setTimeout(() => onDone(), 3500);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Si hay un parámetro 'next', lo respetamos en App.tsx (vía onDone)
+        const next = params.get("next");
+        redirectTimer = setTimeout(() => onDone(next || undefined), 2500);
       }
     });
 
@@ -39,10 +47,11 @@ export default function AuthCallback({ onDone }: AuthCallbackProps) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setStatus("success");
-        redirectTimer = setTimeout(() => onDone(), 3500);
+        const next = params.get("next");
+        redirectTimer = setTimeout(() => onDone(next || undefined), 2500);
       } else {
         setStatus("error");
-        setErrorMsg("El enlace expiró o ya fue usado. Intenta iniciar sesión directamente.");
+        setErrorMsg("El enlace ya no es válido. Por favor, intenta de nuevo.");
       }
     }, 8000);
 
@@ -84,7 +93,7 @@ export default function AuthCallback({ onDone }: AuthCallbackProps) {
             marginBottom: "1.5rem",
           }} />
           <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#111827", marginBottom: "0.5rem", animation: "fadeIn 0.5s ease" }}>
-            Activando tu cuenta...
+            Verificando acceso...
           </h1>
           <p style={{ color: "#374151", fontSize: "1rem", fontWeight: 500 }}>Por favor espera un momento.</p>
         </>
@@ -116,13 +125,13 @@ export default function AuthCallback({ onDone }: AuthCallbackProps) {
             marginBottom: "0.75rem", lineHeight: 1.2,
             animation: "fadeSlideUp 0.5s ease 0.3s both",
           }}>
-            ¡Cuenta activada correctamente!
+            {isRecovery ? '¡Acceso verificado!' : '¡Cuenta confirmada!'}
           </h1>
           <p style={{
             color: "#374151", fontSize: "1rem", marginBottom: "2rem", fontWeight: 500,
             animation: "fadeSlideUp 0.5s ease 0.45s both",
           }}>
-            Bienvenido/a a Cordobesa Refacciones.
+            {isRecovery ? 'Ahora puedes actualizar tu contraseña.' : 'Bienvenido/a a Cordobesa Refacciones.'}
           </p>
 
           <div style={{

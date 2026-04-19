@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { User, MapPin, Package, FileText, Save, Loader2, CheckCircle, AlertCircle, Construction, ArrowLeft, Edit3, Plus, Trash2, Home, Phone, Calendar, ClipboardCheck, Building2, Briefcase, Search, Hash, ChevronRight, Filter, X as CloseIcon, FileDown } from 'lucide-react';
+import { User, MapPin, Package, FileText, Save, Loader2, CheckCircle, AlertCircle, Construction, ArrowLeft, Edit3, Plus, Trash2, Home, Phone, Calendar, ClipboardCheck, Building2, Briefcase, Search, Hash, ChevronRight, Filter, X as CloseIcon, FileDown, Lock, Key, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { generateQuotationPDF } from '../lib/pdfGenerator';
 import { InputRFC } from './InputRFC';
 
-type Section = 'perfil' | 'direcciones' | 'pedidos' | 'cotizaciones';
+type Section = 'perfil' | 'direcciones' | 'pedidos' | 'cotizaciones' | 'seguridad';
 
 interface Address {
     id?: string;
@@ -91,6 +91,16 @@ export function UserProfileView() {
     const [selectedCotizacion, setSelectedCotizacion] = useState<Cotizacion | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [dateFilter, setDateFilter] = useState('');
+    
+    // Security State
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmNewPassword, setConfirmNewPassword] = useState('');
+    
+    // Visibility States
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
@@ -263,6 +273,53 @@ export function UserProfileView() {
         }
     };
 
+    const handleChangePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setMessage(null);
+        setSaving(true);
+
+        if (newPassword !== confirmNewPassword) {
+            setMessage({ type: 'error', text: 'Las nuevas contraseñas no coinciden.' });
+            setSaving(false);
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            setMessage({ type: 'error', text: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+            setSaving(false);
+            return;
+        }
+
+        try {
+            // Verificamos la contraseña actual re-autenticando
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: profile.email,
+                password: currentPassword,
+            });
+
+            if (signInError) {
+                throw new Error('La contraseña actual es incorrecta.');
+            }
+
+            // Si la autenticación es correcta, actualizamos la contraseña
+            const { error: updateError } = await supabase.auth.updateUser({
+                password: newPassword
+            });
+
+            if (updateError) throw updateError;
+
+            setMessage({ type: 'success', text: '¡Contraseña actualizada con éxito!' });
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmNewPassword('');
+        } catch (err: any) {
+            console.error('Error al cambiar contraseña:', err);
+            setMessage({ type: 'error', text: err.message || 'Error al actualizar la contraseña.' });
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const handleCPLookup = async (cp: string) => {
         setAddressForm(prev => ({ ...prev, codigo_postal: cp }));
 
@@ -346,6 +403,7 @@ export function UserProfileView() {
         { id: 'direcciones', label: 'Direcciones', icon: MapPin },
         { id: 'pedidos', label: 'Mis Pedidos', icon: Package },
         { id: 'cotizaciones', label: 'Cotizaciones', icon: FileText },
+        { id: 'seguridad', label: 'Seguridad', icon: Lock },
     ];
 
     if (loading) {
@@ -876,6 +934,118 @@ export function UserProfileView() {
                                         )}
                                     </div>
                                 )}
+                            </div>
+                        )}
+                        {/* --- SEGURIDAD --- */}
+                        {activeSection === 'seguridad' && (
+                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                <div className="flex items-center justify-between gap-4 mb-10 border-b border-gray-50 pb-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="bg-red-50 p-3.5 rounded-2xl text-red-600">
+                                            <Lock className="w-7 h-7" />
+                                        </div>
+                                        <div>
+                                            <h1 className="text-2xl font-black text-gray-900">Seguridad de la Cuenta</h1>
+                                            <p className="text-gray-400 text-sm mt-0.5">Protege tu cuenta actualizando tu contraseña periódicamente</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {message && activeSection === 'seguridad' && (
+                                    <div className={`mb-8 p-5 rounded-2xl flex items-center gap-4 text-sm font-bold border
+                                        ${message.type === 'success' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}
+                                    `}>
+                                        {message.type === 'success' ? <CheckCircle className="w-5 h-5 shrink-0" /> : <ShieldCheck className="w-5 h-5 shrink-0" />}
+                                        <p>{message.text}</p>
+                                    </div>
+                                )}
+
+                                <div className="max-w-xl">
+                                    <form onSubmit={handleChangePassword} className="space-y-8">
+                                        <div className="space-y-6">
+                                            <div className="space-y-2">
+                                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Contraseña Actual</label>
+                                                <div className="relative">
+                                                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                    <input 
+                                                        type={showCurrentPassword ? "text" : "password"} 
+                                                        value={currentPassword} 
+                                                        onChange={(e) => setCurrentPassword(e.target.value)} 
+                                                        className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all font-medium" 
+                                                        placeholder="••••••••"
+                                                        required 
+                                                    />
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-amber-500 transition-colors"
+                                                    >
+                                                        {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2 pt-4 border-t border-gray-50">
+                                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Nueva Contraseña</label>
+                                                <div className="relative">
+                                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                    <input 
+                                                        type={showNewPassword ? "text" : "password"} 
+                                                        value={newPassword} 
+                                                        onChange={(e) => setNewPassword(e.target.value)} 
+                                                        className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all font-medium" 
+                                                        placeholder="Mínimo 6 caracteres"
+                                                        required 
+                                                    />
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-amber-500 transition-colors"
+                                                    >
+                                                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Confirmar Nueva Contraseña</label>
+                                                <div className="relative">
+                                                    <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                    <input 
+                                                        type={showConfirmPassword ? "text" : "password"} 
+                                                        value={confirmNewPassword} 
+                                                        onChange={(e) => setConfirmNewPassword(e.target.value)} 
+                                                        className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all font-medium" 
+                                                        placeholder="Repite tu nueva contraseña"
+                                                        required 
+                                                    />
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-amber-500 transition-colors"
+                                                    >
+                                                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-4">
+                                            <button 
+                                                type="submit" 
+                                                disabled={saving || !currentPassword || !newPassword || !confirmNewPassword} 
+                                                className={`w-full sm:w-auto px-12 py-5 text-amber-950 font-black rounded-2xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3
+                                                    ${(!saving && currentPassword && newPassword && confirmNewPassword) 
+                                                        ? 'bg-amber-500 shadow-amber-100 hover:bg-amber-600' 
+                                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'}
+                                                `}
+                                            >
+                                                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
+                                                Actualizar Contraseña
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         )}
 

@@ -10,7 +10,7 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }: LoginModalProps) {
-    const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
+    const [mode, setMode] = useState<'login' | 'signup' | 'reset'>(initialMode || 'login');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [email, setEmail] = useState('');
@@ -19,7 +19,7 @@ export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }
 
     useEffect(() => {
         if (isOpen) {
-            setIsSignUp(initialMode === 'signup');
+            setMode(initialMode || 'login');
             setError(null);
             setEmail('');
             setPassword('');
@@ -34,20 +34,30 @@ export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }
         setLoading(true);
         setError(null);
 
-        if (!email.trim() || !password.trim()) {
-            setError('Por favor, ingresa tu correo y contraseña.');
+        if (!email.trim() || (mode !== 'reset' && !password.trim())) {
+            setError('Por favor, ingresa los datos requeridos.');
             setLoading(false);
             return;
         }
 
-        if (isSignUp && password !== confirmPassword) {
+        if (mode === 'signup' && password !== confirmPassword) {
             setError('Las contraseñas no coinciden.');
             setLoading(false);
             return;
         }
 
         try {
-            if (isSignUp) {
+            if (mode === 'reset') {
+                const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/auth/callback?next=/perfil`
+                });
+                if (resetError) throw resetError;
+                setError('¡Enlace enviado! Revisa tu correo electrónico.');
+                setLoading(false);
+                return;
+            }
+
+            if (mode === 'signup') {
                 // Registrar nuevo usuario en Supabase Auth
                 const { data, error: signUpError } = await supabase.auth.signUp({
                     email,
@@ -86,7 +96,7 @@ export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }
                 
                 // Si llegamos aquí, el registro de Auth fue exitoso
                 setError('¡Cuenta creada! Revisa tu correo o intenta iniciar sesión.');
-                setIsSignUp(false);
+                setMode('login');
             } else {
                 // Iniciar sesión
                 const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -131,13 +141,13 @@ export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }
                     </button>
                     <img src="/logo.png" alt="Logo" className="h-12 w-auto mb-3 object-contain" />
                     <h3 className="text-[16px] font-black text-gray-900 tracking-widest uppercase">
-                        {isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
+                        {mode === 'signup' ? 'Crear Cuenta' : mode === 'reset' ? 'Recuperar Acceso' : 'Iniciar Sesión'}
                     </h3>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6">
                     {error && (
-                        <div className={`mb-4 p-3 rounded-lg flex items-start gap-2 text-sm ${error.includes('¡Cuenta creada!') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                        <div className={`mb-4 p-3 rounded-lg flex items-start gap-2 text-sm ${error.includes('¡Cuenta creada!') || error.includes('¡Enlace enviado!') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                             <AlertCircle className="h-5 w-5 shrink-0" />
                             <p>{error}</p>
                         </div>
@@ -159,22 +169,36 @@ export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }
                             />
                         </div>
 
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                                Contraseña
-                            </label>
-                            <input
-                                type="password"
-                                id="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#fdc401] focus:border-[#fdc401] outline-none transition-all shadow-sm"
-                                placeholder="••••••••"
-                                required
-                            />
-                        </div>
 
-                        {isSignUp && (
+                        {mode !== 'reset' && (
+                            <div>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                                        Contraseña
+                                    </label>
+                                    {mode === 'login' && (
+                                        <button 
+                                            type="button" 
+                                            onClick={() => { setMode('reset'); setError(null); }}
+                                            className="text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors"
+                                        >
+                                            ¿Olvidaste tu contraseña?
+                                        </button>
+                                    )}
+                                </div>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#fdc401] focus:border-[#fdc401] outline-none transition-all shadow-sm"
+                                    placeholder="••••••••"
+                                    required
+                                />
+                            </div>
+                        )}
+
+                        {mode === 'signup' && (
                             <div className="animate-in slide-in-from-top-2 duration-200">
                                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                                     Verificar Contraseña
@@ -199,26 +223,35 @@ export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }
                             className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-black text-black bg-[#fdc401] border border-transparent rounded-lg hover:bg-[#cc9e01] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#fdc401] transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
                         >
                             {loading ? (
-                                <>{isSignUp ? 'Creando cuenta...' : 'Iniciando sesión...'}</>
+                                <>{mode === 'signup' ? 'Creando cuenta...' : mode === 'reset' ? 'Enviando...' : 'Iniciando sesión...'}</>
                             ) : (
                                 <>
-                                    {isSignUp ? <UserPlus className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
-                                    {isSignUp ? 'Registrarse' : 'Entrar'}
+                                    {mode === 'signup' ? <UserPlus className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
+                                    {mode === 'signup' ? 'Registrarse' : mode === 'reset' ? 'Enviar Enlace' : 'Entrar'}
                                 </>
                             )}
                         </button>
 
-                        <div className="text-center">
+                        <div className="text-center flex flex-col gap-2">
                             <button
                                 type="button"
                                 onClick={() => {
-                                    setIsSignUp(!isSignUp);
+                                    setMode(mode === 'login' ? 'signup' : 'login');
                                     setError(null);
                                 }}
                                 className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
                             >
-                                {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Crea una'}
+                                {mode === 'signup' ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Crea una'}
                             </button>
+                            {mode === 'reset' && (
+                                <button
+                                    type="button"
+                                    onClick={() => { setMode('login'); setError(null); }}
+                                    className="text-xs font-bold text-gray-500 hover:text-gray-700 transition-colors"
+                                >
+                                    Volver al inicio
+                                </button>
+                            )}
                         </div>
                     </div>
                 </form>
