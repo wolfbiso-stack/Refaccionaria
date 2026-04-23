@@ -95,17 +95,28 @@ function App() {
 
   const isAuthenticated = !!session;
 
-  // 🔥 CONTROL DE PRODUCCIÓN
-  // Marcamos como "Coming Soon" solo si es un entorno de producción REAL 
-  // y NO es un dominio de previsualización de Vercel (que contienen '-git-')
-  const isProduction = import.meta.env.MODE === "production";
-  const isDevDeployment = typeof window !== 'undefined' && (
-    window.location.hostname.includes('localhost') || 
-    window.location.hostname.includes('-git-')
-  );
+  // 🔥 CONTROL DE VISIBILIDAD DE LA APLICACIÓN
+  // Determina si se muestra la aplicación completa o la pantalla de "Próximamente"
+  // centralizando la lógica de entornos locales, Vercel y control manual.
+  const shouldShowFullApp = () => {
+    const appStatus = import.meta.env.VITE_APP_STATUS;
+    const vercelEnv = import.meta.env.VERCEL_ENV;
+    const isLocalDev = import.meta.env.DEV; // Vite expone .DEV verdadero en local
 
-  // 👉 Si es producción y NO es desarrollo/preview, mostrar ComingSoon
-  if (isProduction && !isDevDeployment) {
+    // 1. Siempre mostrar si estamos en desarrollo local (Vite natural o Vercel Dev)
+    if (isLocalDev || vercelEnv === "development") return true;
+
+    // 2. Mostrar en previsualizaciones de Vercel (Ramas / Pull Requests)
+    if (vercelEnv === "preview") return true;
+
+    // 3. Control manual por variable de entorno para forzar visualización
+    if (appStatus === "dev") return true;
+
+    // 4. Producción real u otros entornos → ocultar la app
+    return false;
+  };
+
+  if (!shouldShowFullApp()) {
     return (
       <div className="min-h-screen bg-[#0f1115]">
         <ComingSoon />
