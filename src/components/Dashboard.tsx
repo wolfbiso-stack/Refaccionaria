@@ -93,10 +93,10 @@ export function Dashboard() {
     }
 
     const comingSoonCards = [
-        { id: 2, title: "2. Gestión avanzada de inventario", icon: <Package className="w-6 h-6" />, color: "bg-indigo-100 text-indigo-700 hover:border-indigo-300 hover:shadow-indigo-100" },
-        { id: 3, title: "3. Gestión de empleados", icon: <Users className="w-6 h-6" />, color: "bg-emerald-100 text-emerald-700 hover:border-emerald-300 hover:shadow-emerald-100" },
-        { id: 5, title: "5. Alertas inteligentes", icon: <Bell className="w-6 h-6" />, color: "bg-amber-100 text-amber-700 hover:border-amber-300 hover:shadow-amber-100" },
-        { id: 9, title: "9. Configuración del sistema", icon: <Settings className="w-6 h-6" />, color: "bg-gray-100 text-gray-700 hover:border-gray-300 hover:shadow-gray-100" }
+        // { id: 2, title: "2. Gestión avanzada de inventario", icon: <Package className="w-6 h-6" />, color: "bg-indigo-100 text-indigo-700 hover:border-indigo-300 hover:shadow-indigo-100" },
+        { id: 3, title: "1. Gestión de empleados", icon: <Users className="w-6 h-6" />, color: "bg-emerald-100 text-emerald-700 hover:border-emerald-300 hover:shadow-emerald-100" },
+        // { id: 5, title: "5. Alertas inteligentes", icon: <Bell className="w-6 h-6" />, color: "bg-amber-100 text-amber-700 hover:border-amber-300 hover:shadow-amber-100" },
+        { id: 9, title: "2. Configuración del sistema", icon: <Settings className="w-6 h-6" />, color: "bg-gray-100 text-gray-700 hover:border-gray-300 hover:shadow-gray-100" }
     ];
 
     return (

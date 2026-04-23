@@ -311,7 +311,8 @@ export function SystemSettings() {
                         </p>
                     </button>
 
-                    {/* Module 2: Zip Codes */}
+                    {/* Module 2: Zip Codes (Hidden as requested) */}
+                    {/* 
                     <button 
                         onClick={() => setActiveModule('zipcodes')}
                         className="bg-white p-10 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all text-left group"
@@ -324,11 +325,12 @@ export function SystemSettings() {
                             Importa la base de datos de correos electrónicos y códigos postales de México por estados.
                         </p>
                     </button>
+                    */}
 
                     {/* Module 3: Page Configuration (Banners) */}
                     <button 
                         onClick={() => setActiveModule('page_config')}
-                        className="bg-white p-10 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all text-left group md:col-span-2"
+                        className="bg-white p-10 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all text-left group"
                     >
                         <div className="bg-amber-100 w-16 h-16 rounded-2xl flex items-center justify-center text-amber-600 mb-6 group-hover:bg-amber-600 group-hover:text-white transition-colors shadow-inner">
                             <Layout className="w-8 h-8" />
