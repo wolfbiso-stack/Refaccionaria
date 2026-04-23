@@ -16,7 +16,7 @@ serve(async (req) => {
   try {
     const { folio, profile, items } = await req.json()
 
-    const adminEmail = "wolfbiso@gmail.com"
+    const adminEmail = "cordobesa_refacciones@hotmail.com"
     
     // Formatear la lista de productos
     const itemsHtml = items.map((item: any) => `
