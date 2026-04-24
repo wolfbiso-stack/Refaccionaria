@@ -324,9 +324,9 @@ export function ProductDetail({ isAuthenticated = false, userRole = null, userId
               <div className="mb-6">
                 <button
                   onClick={toggleFavorite}
-                  className={`flex items-center group gap-2 font-bold text-xs tracking-wide transition-colors ${isFavorite ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
+                  className="flex items-center group gap-2 font-bold text-xs tracking-wide transition-colors text-gray-900 hover:text-black"
                 >
-                  <Heart className={`w-4 h-4 transition-colors ${isFavorite ? 'text-red-500' : 'text-gray-300 group-hover:text-red-400'}`} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={2.5}/>
+                  <Heart className={`w-4 h-4 transition-colors ${isFavorite ? 'text-red-500' : 'text-gray-900 group-hover:text-black'}`} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={2.5}/>
                   Agregar a favoritos
                 </button>
               </div>
@@ -338,7 +338,8 @@ export function ProductDetail({ isAuthenticated = false, userRole = null, userId
                 </div>
                 <div>
                   <p className="text-[13px] text-gray-600">
-                    <strong className="text-gray-900">Garantía contra defectos de fábrica:</strong> Tu producto está respaldado. <br className="hidden sm:block" />
+                    <strong className="text-gray-900">Garantía contra defectos de fábrica:</strong>
+                    <br className="hidden sm:block" />
                     <span className="opacity-80 text-xs mt-1 inline-block">*Aplican Restricciones</span>
                   </p>
                 </div>
@@ -363,16 +364,7 @@ export function ProductDetail({ isAuthenticated = false, userRole = null, userId
                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                          </svg>
                        </a>
-                       <a 
-                         href={`fb-messenger://share?link=${encodeURIComponent(window.location.href)}&app_id=123456789`}
-                         target="_blank"
-                         rel="noopener noreferrer"
-                         className="w-8 h-8 rounded-full bg-[#0084FF] flex items-center justify-center text-white hover:opacity-90 transition-opacity"
-                       >
-                         <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                           <path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.654V24l4.088-2.242c1.092.304 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111C24 4.974 18.627 0 12 0zm1.291 14.88l-3.057-3.262-5.96 3.262 6.556-6.958 3.129 3.262 5.89-3.262-6.558 6.958z"/>
-                         </svg>
-                       </a>
+
                        <a 
                          href={`https://wa.me/?text=${encodeURIComponent(`Mira esta refacción en CORDOBESA: ${product.name} - ${window.location.href}`)}`}
                          target="_blank"
