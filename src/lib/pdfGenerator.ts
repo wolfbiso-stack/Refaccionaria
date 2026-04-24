@@ -54,8 +54,8 @@ export const generateQuotationPDF = async (
     
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text('C. Altamirano, Zapotal, 96039 Acayucan, Veracruz.', textX, 32);
-    doc.text('ventas@refaccionariacordobesa.com | Tel: 924 688 6220', textX, 37);
+    doc.text('C. Altamirano N° 710, Zapotal, 96039 Acayucan, Veracruz.', textX, 32);
+    doc.text('cordobesa_refacciones@hotmail.com | Cel: 924 688 6220', textX, 37);
 
     // --- Quote Info ---
     doc.setTextColor(0, 0, 0);
@@ -112,9 +112,10 @@ export const generateQuotationPDF = async (
     doc.setFontSize(9);
     doc.setFont('helvetica', 'italic');
     doc.text('NOTAS IMPORTANTES:', 15, finalY);
-    doc.text('1. Esta cotización tiene una vigencia de 5 días hábiles.', 15, finalY + 5);
+    doc.text('1. Esta cotización tiene una vigencia de 3 días hábiles.', 15, finalY + 5);
     doc.text('2. Precios sujetos a cambio sin previo aviso.', 15, finalY + 10);
-    doc.text('3. Tiempo de entrega aproximado de 1 a 3 días hábiles.', 15, finalY + 15);
+    doc.text('3. Tiempo de entrega al siguiente día en la zona conurbada Acayucan, Oluta, Sayula y Soconusco.', 15, finalY + 15);
+    doc.text('4. Entrega inmediata en sucursal si hay en existencia', 15, finalY + 20);
 
     // Download
     const fileName = `Cotizacion_${folio.replace('#', '')}_${date.replace(/[\/]/g, '-')}.pdf`;

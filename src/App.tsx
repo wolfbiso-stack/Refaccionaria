@@ -262,7 +262,7 @@ function App() {
             } />
 
             <Route path="/configuracion" element={
-              userRole === 'admin' ? <SystemSettings /> : (
+              userRole === 'admin' || userRole === 'empleado' ? <SystemSettings /> : (
                 <div className="text-center py-20 px-4">
                   <h1 className="text-2xl font-bold text-red-600">Acceso Denegado</h1>
                   <p className="text-gray-500 mt-2">Acceso restringido.</p>

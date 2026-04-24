@@ -1,5 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 
 const corsHeaders = {
@@ -7,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -18,13 +16,14 @@ serve(async (req) => {
       throw new Error('Missing RESEND_API_KEY environment variable')
     }
 
-    const { name, email, subject, message } = await req.json()
+    const body = await req.json().catch(() => ({}))
+    const { name, email, subject, message } = body
 
     if (!name || !email || !message) {
       throw new Error('Name, email, and message are required')
     }
 
-    const adminEmail = "cordobesa_refacciones@hotmail.com"
+    const adminEmail = "wolfbiso@gmail.com"
     
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -33,9 +32,9 @@ serve(async (req) => {
         'Authorization': `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'Cordobesa Refacciones <onboarding@resend.dev>',
+        from: 'Cordobesa Refacciones <no-responder@cordobesarefacciones.mx>',
         to: [adminEmail],
-        reply_to: email, // Permite al administrador responder directamente al cliente
+        reply_to: email,
         subject: `Nuevo Mensaje de Soporte: ${subject || 'Soporte Técnico'}`,
         html: `
           <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; padding: 20px;">
@@ -76,8 +75,9 @@ serve(async (req) => {
       status: 200,
     })
   } catch (error) {
-    console.error('Function error:', error.message)
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+    console.error('Function error:', errorMessage)
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     })

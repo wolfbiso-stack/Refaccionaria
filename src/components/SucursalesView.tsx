@@ -40,7 +40,7 @@ export function SucursalesView() {
                                 <div>
                                     <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Dirección</p>
                                     <p className="font-bold text-gray-700 leading-snug">
-                                        C. Altamirano, Zapotal <br />
+                                        C. Altamirano N° 710, Col. Zapotal <br />
                                         96039 Acayucan, Veracruz.
                                     </p>
                                 </div>
@@ -70,7 +70,7 @@ export function SucursalesView() {
 
                         <div className="mt-10">
                             <a
-                                href="https://maps.app.goo.gl/93566151-2427-4a12-9935-0807a97be7a0"
+                                href="https://maps.google.com/?cid=8762030591747706602&g_mp=CiVnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLkdldFBsYWNlEAIYASAA&hl=es-419&gl=MX&source=embed"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-full flex items-center justify-center gap-3 bg-amber-500 hover:bg-amber-600 text-amber-950 px-6 py-4 rounded-2xl font-black shadow-lg shadow-amber-100 transition-all active:scale-95"

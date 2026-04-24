@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 import { ProductFormModal } from './ProductFormModal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { getSearchFilterString } from '../utils/searchUtils';
 
 interface Product {
   id: string;
@@ -138,7 +139,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
       }
 
       if (searchQuery) {
-        query = query.or(`name.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%`);
+        query = query.or(getSearchFilterString(searchQuery));
       }
 
       const from = (currentPage - 1) * ITEMS_PER_PAGE;

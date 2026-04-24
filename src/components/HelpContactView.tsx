@@ -46,17 +46,17 @@ export function HelpContactView() {
 
         } catch (err: any) {
             console.error('Error sending support email:', err);
-            
+
             // Check for specific error messages or 404
             let errorMsg = 'Ocurrió un error al enviar tu mensaje. Por favor, intenta de nuevo.';
-            
+
             if (err.message?.includes('404')) {
                 errorMsg = 'El sistema de soporte no ha sido desplegado aún. Por favor, contacta por WhatsApp.';
                 console.warn('Edge Function "send-support-email" not found. Need to deploy/serve.');
             } else if (err.message) {
                 errorMsg = `Error: ${err.message}. Intenta de nuevo.`;
             }
-            
+
             setError(errorMsg);
         } finally {
             setSending(false);
@@ -107,11 +107,11 @@ export function HelpContactView() {
                         <div className="space-y-4">
                             <div className="flex justify-between items-center border-b border-white/5 pb-3">
                                 <span className="font-bold text-gray-400">Lunes a Viernes:</span>
-                                <span className="font-black text-white">8:30 AM - 6:30 PM</span>
+                                <span className="font-black text-white">9:00 AM - 6:00 PM</span>
                             </div>
                             <div className="flex justify-between items-center border-b border-white/5 pb-3">
                                 <span className="font-bold text-gray-400">Sábado:</span>
-                                <span className="font-black text-white">8:30 AM - 1:30 PM</span>
+                                <span className="font-black text-white">9:00 AM - 3:00 PM</span>
                             </div>
                             <div className="flex justify-between items-center text-[#fdc401]">
                                 <span className="font-bold">Domingo:</span>

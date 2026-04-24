@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { ClipboardList, ShoppingCart, User, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { getSearchFilterString } from '../utils/searchUtils';
 
 interface HeaderProps {
   isAuthenticated: boolean;
@@ -44,7 +45,7 @@ export function Header({ isAuthenticated, userRole, userProfile, email, onLoginC
         const { data } = await supabase
           .from('products')
           .select('id, name, sku, stock, image_url, slug')
-          .or(`name.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%`)
+          .or(getSearchFilterString(searchQuery))
           .limit(5);
 
         setResults(data || []);

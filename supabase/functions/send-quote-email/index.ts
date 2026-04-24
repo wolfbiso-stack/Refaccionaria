@@ -1,5 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 
 const corsHeaders = {
@@ -7,16 +5,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { folio, profile, items } = await req.json()
+    const body = await req.json().catch(() => ({}))
+    const { folio, profile, items } = body
 
-    const adminEmail = "cordobesa_refacciones@hotmail.com"
+    if (!folio || !profile || !items) {
+      throw new Error('Folio, profile, and items are required')
+    }
+
+    const adminEmail = "wolfbiso@gmail.com"
     
     // Formatear la lista de productos
     const itemsHtml = items.map((item: any) => `
@@ -38,7 +41,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'Cordobesa Refacciones <onboarding@resend.dev>', // Cambiar por tu dominio verificado
+        from: 'Cordobesa Refacciones <no-responder@cordobesarefacciones.mx>',
         to: [adminEmail],
         subject: `Nueva Cotización Generada: ${folio}`,
         html: `
@@ -84,7 +87,9 @@ serve(async (req) => {
       status: 200,
     })
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+    console.error('Function error:', errorMessage)
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     })
