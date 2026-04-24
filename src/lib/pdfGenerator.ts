@@ -55,7 +55,9 @@ export const generateQuotationPDF = async (
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.text('C. Altamirano N° 710, Zapotal, 96039 Acayucan, Veracruz.', textX, 32);
-    doc.text('cordobesa_refacciones@hotmail.com | Cel: 924 688 6220', textX, 37);
+    const u = 'cordobesa_refacciones';
+    const d = 'hotmail.com';
+    doc.text(`${u}@${d} | Cel: 924 688 6220`, textX, 37);
 
     // --- Quote Info ---
     doc.setTextColor(0, 0, 0);

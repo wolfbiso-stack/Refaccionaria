@@ -62,8 +62,8 @@ export function SucursalesView() {
                                 </div>
                                 <div>
                                     <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Horario</p>
-                                    <p className="font-bold text-gray-700">Lunes - Viernes: 8:00 AM - 6:00 PM</p>
-                                    <p className="font-bold text-gray-700">Sábados: 8:00 AM - 2:00 PM</p>
+                                    <p className="font-bold text-gray-700">Lunes - Viernes: 9:00 AM - 6:00 PM</p>
+                                    <p className="font-bold text-gray-700">Sábados: 8:00 AM - 3:00 PM</p>
                                 </div>
                             </div>
                         </div>

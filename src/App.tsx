@@ -26,6 +26,7 @@ import ActivarCuenta from './pages/ActivarCuenta';
 import { BannerCarousel } from './components/BannerCarousel';
 import { NosotrosView } from './components/NosotrosView';
 import { ProductosView } from './components/ProductosView';
+import { PrivacyPolicyView } from './components/PrivacyPolicyView';
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -283,6 +284,7 @@ function App() {
             <Route path="/ayuda-contacto" element={<HelpContactView />} />
             <Route path="/cotizador" element={<CotizadorView />} />
             <Route path="/proximamente" element={<ComingSoon />} />
+            <Route path="/aviso-privacidad" element={<PrivacyPolicyView />} />
             <Route path="/auth/callback" element={<AuthCallback onDone={(next) => window.location.href = next || '/'} />} />
             <Route path="/activar" element={<ActivarCuenta />} />
           </Routes>

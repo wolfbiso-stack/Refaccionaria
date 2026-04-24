@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Phone, Mail, MessageCircle, MapPin, Clock, ShieldCheck, HeartHandshake, Send, X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { SafeEmail } from './SafeEmail';
 import { supabase } from '../lib/supabase';
 
 export function HelpContactView() {
@@ -8,7 +9,7 @@ export function HelpContactView() {
     const email = "cordobesa_refacciones@hotmail.com";
     const facebookUrl = "https://www.facebook.com/cordobesarefax";
 
-    const address = "C. Altamirano, Zapotal, 96039 Acayucan, Veracruz";
+    const address = "C. Altamirano N°710, Zapotal, 96039 Acayucan, Veracruz";
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 
     const [showContactForm, setShowContactForm] = useState(false);
@@ -136,8 +137,7 @@ export function HelpContactView() {
                         </div>
                     </a>
 
-                    <a
-                        href={`mailto:${email}`}
+                    <div
                         className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-red-50 hover:border-red-200 transition-all flex flex-col items-center justify-center gap-4 text-center group overflow-hidden"
                     >
                         <div className="w-14 h-14 bg-red-50 text-red-600 rounded-full flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-all shadow-sm">
@@ -145,9 +145,9 @@ export function HelpContactView() {
                         </div>
                         <div className="w-full truncate px-3">
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Email</p>
-                            <p className="text-xs font-black text-gray-800 truncate" title={email}>{email}</p>
+                            <SafeEmail className="text-xs font-black text-gray-800 truncate block w-full" />
                         </div>
-                    </a>
+                    </div>
 
                     <a
                         href={`https://wa.me/${waNumber}?text=${encodeURIComponent('Hola, necesito ayuda respecto a mi maquinaria.')}`}
@@ -191,9 +191,9 @@ export function HelpContactView() {
                         <div className="w-16 h-16 bg-[#fdc401]/10 text-[#917101] rounded-3xl flex items-center justify-center border border-[#fdc401]/20">
                             <MapPin className="w-8 h-8" />
                         </div>
-                        <h3 className="text-3xl font-black text-gray-900 tracking-tight">Nuestra Ubicación Principal</h3>
+                        <h3 className="text-3xl font-black text-gray-900 tracking-tight">Nuestra Ubicación</h3>
                         <p className="text-gray-600 font-medium leading-relaxed">
-                            Calle Altamirano en la Colonia Zapotal, Acayucan, Veracruz. Punto estratégico para el servicio en todo el sureste mexicano.
+                            Calle Altamirano N° 710 en la Colonia Zapotal, Acayucan, Veracruz.
                         </p>
                         <div className="pt-6 border-t border-gray-50">
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Dirección Completa</p>

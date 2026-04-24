@@ -87,7 +87,11 @@ export function Header({ isAuthenticated, userRole, userProfile, email, onLoginC
                     {(userRole === 'admin' || userRole === 'empleado') && (
                       <Link to="/dashboard" className="hidden lg:block font-bold opacity-80 hover:opacity-100 transition-opacity">Panel Admin</Link>
                     )}
-                    <span className="opacity-80">Hola, <span className="font-bold opacity-100">{userProfile?.first_name || email?.split('@')[0] || 'Usuario'}</span></span>
+                    <div className="flex flex-col items-start leading-[1.1]">
+                      <span className="opacity-80">Hola, <span className="font-bold opacity-100">{userProfile?.first_name || email?.split('@')[0] || 'Usuario'}</span></span>
+                      {userRole === 'admin' && <span className="text-[9px] font-black text-red-600 uppercase tracking-wider">Administrador</span>}
+                      {userRole === 'empleado' && <span className="text-[9px] font-black text-blue-600 uppercase tracking-wider">Empleado</span>}
+                    </div>
                     <button onClick={() => onLogoutClick()} className="opacity-80 hover:opacity-100 transition-opacity">Cerrar Sesión</button>
                   </span>
                 )}
