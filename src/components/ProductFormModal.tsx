@@ -38,7 +38,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
   useEffect(() => {
     if (isOpen) {
       if (initialProduct) {
-        // Migration: If we have image_url but no images array, put it in the array
+        // Migración: Si tenemos image_url pero no un arreglo de imágenes, ponerlo en el arreglo
         const initialImages = initialProduct.images || (initialProduct.image_url ? [initialProduct.image_url] : []);
         
         setFormData({
@@ -71,7 +71,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
     setLoading(true);
     setError(null);
 
-    // Basic validation
+    // Validación básica
     if (!formData.name.trim()) {
       setError('El nombre del producto es obligatorio.');
       setLoading(false);
@@ -120,7 +120,7 @@ export function ProductFormModal({ isOpen, onClose, onSuccess, initialProduct }:
         if (supabaseError) throw supabaseError;
       }
 
-      // Success
+      // Éxito
       setFormData({ name: '', brand: '', sku: '', description: '', stock: 0, images: [] });
       onSuccess();
       onClose();

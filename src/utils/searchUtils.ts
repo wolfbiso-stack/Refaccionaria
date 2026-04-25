@@ -10,34 +10,34 @@ export function getSearchFilterString(searchQuery: string): string {
   const words = cleanQuery.split(/\s+/);
   const conditions: string[] = [];
 
-  // 1. Add the full query as wfts (Web Full Text Search)
-  // This is the most powerful as it handles stemming if the DB is configured for it.
-  // We use the full query here.
+  // 1. Agregar la consulta completa como wfts (Búsqueda de Texto Completo en Web)
+  // Esto es lo más poderoso ya que maneja la derivación si la base de datos está configurada para ello.
+  // Usamos la consulta completa aquí.
   conditions.push(`name.wfts.${cleanQuery}`);
 
-  // 2. Add individual word variations for better matching
+  // 2. Agregar variaciones de palabras individuales para una mejor coincidencia
   words.forEach(word => {
-    // Remove characters that might break the .or() syntax
+    // Remover caracteres que podrían romper la sintaxis de .or()
     const safeWord = word.replace(/[(),]/g, '');
     if (!safeWord) return;
 
-    // Standard ilike matches
+    // Coincidencias estándar ilike
     conditions.push(`name.ilike.%${safeWord}%`);
     conditions.push(`sku.ilike.%${safeWord}%`);
 
-    // Spanish plural handling: 'llantas' -> 'llanta'
+    // Manejo de plurales en español: 'llantas' -> 'llanta'
     if (safeWord.toLowerCase().endsWith('s') && safeWord.length > 3) {
       const singular = safeWord.slice(0, -1);
       conditions.push(`name.ilike.%${singular}%`);
     }
 
-    // Spanish plural handling: 'motores' -> 'motor'
+    // Manejo de plurales en español: 'motores' -> 'motor'
     if (safeWord.toLowerCase().endsWith('es') && safeWord.length > 4) {
       const singular = safeWord.slice(0, -2);
       conditions.push(`name.ilike.%${singular}%`);
     }
   });
 
-  // Remove duplicates and join
+  // Remover duplicados y unir
   return [...new Set(conditions)].join(',');
 }

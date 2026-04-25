@@ -24,7 +24,7 @@ export function InputRFC({
     const [errorMsg, setErrorMsg] = useState('');
     const debounceTimer = useRef<any>(null);
 
-    // Sync with external value (important for initial load)
+    // Sincronizar con el valor externo (importante para la carga inicial)
     useEffect(() => {
         if (value !== localValue) {
             setLocalValue(value);

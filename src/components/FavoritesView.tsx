@@ -29,7 +29,7 @@ export function FavoritesView({ isAuthenticated, userId, onRequireLogin }: { isA
         .eq('user_id', userId);
 
       if (!error && data) {
-        // filter out any null products if any constraint violated
+        // filtrar cualquier producto nulo si se violó alguna restricción
         const populatedProducts = data.map(d => d.products).filter(p => p !== null);
         setProducts(populatedProducts);
       }
@@ -49,7 +49,7 @@ export function FavoritesView({ isAuthenticated, userId, onRequireLogin }: { isA
       onRequireLogin();
       return;
     }
-    // Optimistic UI: Remove from list immediately
+    // IU Optimista: Eliminar de la lista inmediatamente
     setProducts(prev => prev.filter(p => p.id !== productId));
     await supabase.from('user_favorites').delete().eq('user_id', userId).eq('product_id', productId);
   };

@@ -6,7 +6,7 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS
+  // Manejar CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
       throw new Error('Folio, profile, and items are required')
     }
 
-    const adminEmail = "wolfbiso@gmail.com"
+    const adminEmail = "cordobesa_refacciones@hotmail.com"
     
     // Formatear la lista de productos
     const itemsHtml = items.map((item: any) => `

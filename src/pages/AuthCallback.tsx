@@ -9,7 +9,7 @@ interface AuthCallbackProps {
 
 export default function AuthCallback({ onDone }: AuthCallbackProps) {
   const [status, setStatus] = useState<Status>(() => {
-    // Check for debug parameter in URL: ?debug=success | error | loading
+    // Verificar parámetro de depuración en URL: ?debug=success | error | loading
     const params = new URLSearchParams(window.location.search);
     const debug = params.get("debug");
     if (debug === "success" || debug === "error" || debug === "loading") {
@@ -22,7 +22,7 @@ export default function AuthCallback({ onDone }: AuthCallbackProps) {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.has("debug")) return; // Skip logic if in debug mode
+    if (params.has("debug")) return; // Omitir lógica si está en modo depuración
 
     let redirectTimer: ReturnType<typeof setTimeout>;
 
@@ -42,7 +42,7 @@ export default function AuthCallback({ onDone }: AuthCallbackProps) {
       }
     });
 
-    // Fallback logic
+    // Lógica de respaldo
     const fallback = setTimeout(async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {

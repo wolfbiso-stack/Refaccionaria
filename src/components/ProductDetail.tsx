@@ -65,7 +65,7 @@ export function ProductDetail({ isAuthenticated = false, userRole = null, userId
     if (!product) return;
 
     const currentlyFavorite = isFavorite;
-    setIsFavorite(!currentlyFavorite); // Optimistic
+    setIsFavorite(!currentlyFavorite); // Optimista
 
     try {
       if (currentlyFavorite) {
@@ -75,7 +75,7 @@ export function ProductDetail({ isAuthenticated = false, userRole = null, userId
       }
     } catch (err) {
       console.error(err);
-      setIsFavorite(currentlyFavorite); // Revert
+      setIsFavorite(currentlyFavorite); // Revertir
     }
   };
 

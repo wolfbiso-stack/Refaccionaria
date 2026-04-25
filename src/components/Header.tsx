@@ -100,7 +100,7 @@ export function Header({ isAuthenticated, userRole, userProfile, email, onLoginC
           </div>
         </div>
 
-      {/* Main Row (Thick) - Blanca */}
+      {/* Fila Principal (Gruesa) - Blanca */}
       <div className="bg-white text-gray-900 border-b border-gray-100 shadow-sm relative z-10 order-2">
         <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 py-2 lg:py-2">
           <div className="flex flex-wrap lg:flex-nowrap justify-between items-center gap-y-4 gap-x-3 lg:gap-8">

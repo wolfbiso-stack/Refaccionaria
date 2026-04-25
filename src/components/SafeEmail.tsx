@@ -6,14 +6,14 @@ interface SafeEmailProps {
 }
 
 /**
- * Component to display the company email while protecting it from simple spam bots.
- * It uses string concatenation and a hidden span to confuse scrapers.
+ * Componente para mostrar el correo de la empresa mientras lo protege de bots de spam simples.
+ * Utiliza concatenación de cadenas y un span oculto para confundir a los scrapers.
  */
 export function SafeEmail({ className = "", title }: SafeEmailProps) {
   const u = "cordobesa_refacciones";
   const d = "hotmail.com";
   
-  // Construct email on the fly to avoid having the full string in the static HTML as much as possible
+  // Construir correo electrónico sobre la marcha para evitar tener la cadena completa en el HTML estático tanto como sea posible
   const getFullEmail = () => `${u}@${d}`;
 
   return (

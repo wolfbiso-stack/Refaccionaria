@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Plus, ShoppingCart, LayoutGrid, List as ListIcon } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
@@ -36,15 +36,55 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
   const searchQuery = searchParams.get('q') || '';
   const sortBy = searchParams.get('sort') || 'stock-desc';
   
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [customLimit, setCustomLimit] = useState(limit || 12);
+  const viewMode = (searchParams.get('view') as 'grid' | 'list') || 'grid';
+  const customLimit = Number(searchParams.get('limit')) || limit || 12;
+  const currentPage = Number(searchParams.get('page')) || 1;
+
+  const setViewMode = (mode: 'grid' | 'list') => {
+    setSearchParams(prev => {
+      const p = new URLSearchParams(prev);
+      p.set('view', mode);
+      return p;
+    }, { replace: true });
+  };
+
+  const setCustomLimit = (newLimit: number) => {
+    setSearchParams(prev => {
+      const p = new URLSearchParams(prev);
+      p.set('limit', newLimit.toString());
+      p.set('page', '1');
+      return p;
+    }, { replace: true });
+  };
+
+  const setCurrentPage = (pageUpdater: number | ((prev: number) => number)) => {
+    setSearchParams(prev => {
+      const p = new URLSearchParams(prev);
+      const newPage = typeof pageUpdater === 'function' ? pageUpdater(currentPage) : pageUpdater;
+      p.set('page', newPage.toString());
+      return p;
+    });
+  };
+
+  const stateKey = `productGrid_data_${showAdvancedFilters ? 'adv' : 'basic'}`;
   
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(() => {
+    const saved = sessionStorage.getItem(`${stateKey}_products`);
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [totalProducts, setTotalProducts] = useState(() => {
+    const saved = sessionStorage.getItem(`${stateKey}_total`);
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem(`${stateKey}_products`, JSON.stringify(products));
+    sessionStorage.setItem(`${stateKey}_total`, totalProducts.toString());
+  }, [products, totalProducts, stateKey]);
+
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
   const fetchFavorites = useCallback(async () => {
@@ -90,7 +130,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
       }
     } catch (err) {
       console.error('Error toggling favorite', err);
-      fetchFavorites(); // Revert on failure
+      fetchFavorites(); // Revertir en caso de fallo
     }
   };
 
@@ -99,7 +139,12 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
 
   const canManageProducts = userRole === 'admin' || userRole === 'empleado';
 
+  const isFirstMount = useRef(true);
   useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
     setCurrentPage(1);
   }, [searchQuery, sortBy]);
 
@@ -162,8 +207,14 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
     }
   }, [searchQuery, currentPage, sortBy, ITEMS_PER_PAGE]);
 
+  const isFirstMountScroll = useRef(true);
   useEffect(() => {
     fetchProducts();
+    
+    if (isFirstMountScroll.current) {
+      isFirstMountScroll.current = false;
+      return;
+    }
     // Scroll to top when page changes
     if (currentPage > 1 || searchQuery || sortBy) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -227,7 +278,6 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
                 value={customLimit}
                 onChange={(e) => {
                   setCustomLimit(Number(e.target.value));
-                  setCurrentPage(1);
                 }}
                 className="bg-gray-50 text-sm font-bold text-gray-900 rounded-xl px-3 py-2 border-none ring-1 ring-gray-200 outline-none focus:ring-2 focus:ring-[#fdc401] min-w-[70px]"
               >
@@ -258,7 +308,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
         </div>
       )}
 
-      {loading ? (
+      {loading && products.length === 0 ? (
         <div className="w-full flex flex-col items-center justify-center py-24 gap-4">
           <div className="w-12 h-12 border-4 border-amber-100 border-t-amber-500 rounded-full animate-spin"></div>
           <p className="text-xs font-black text-gray-400 uppercase tracking-widest animate-pulse">Sincronizando Catálogo...</p>
@@ -269,21 +319,23 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
           <p className="text-gray-400 font-bold italic">No se encontraron productos en esta sección.</p>
         </div>
       ) : (
-        <div className={viewMode === 'grid' ? "grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4" : "flex flex-col gap-4"}>
-          {products.map((product) => (
-            <ProductSmallCard
-              key={product.id}
-              product={product}
-              isFavorite={favoriteIds.has(product.id)}
-              onToggleFavorite={() => toggleFavorite(product.id)}
-              onAddToCart={addToCart}
-              onNavigate={() => navigate(`/producto/${product.slug || product.id}`)}
-              onEdit={() => { setProductToEdit(product); setIsAddModalOpen(true); }}
-              onDelete={(e: React.MouseEvent) => handleDeleteProduct(product.id, e)}
-              canManage={canManageProducts && isAuthenticated}
-              viewMode={viewMode}
-            />
-          ))}
+        <div className={`transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+          <div className={viewMode === 'grid' ? "grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4" : "flex flex-col gap-4"}>
+            {products.map((product) => (
+              <ProductSmallCard
+                key={product.id}
+                product={product}
+                isFavorite={favoriteIds.has(product.id)}
+                onToggleFavorite={() => toggleFavorite(product.id)}
+                onAddToCart={addToCart}
+                onNavigate={() => navigate(`/producto/${product.slug || product.id}`)}
+                onEdit={() => { setProductToEdit(product); setIsAddModalOpen(true); }}
+                onDelete={(e: React.MouseEvent) => handleDeleteProduct(product.id, e)}
+                canManage={canManageProducts && isAuthenticated}
+                viewMode={viewMode}
+              />
+            ))}
+          </div>
         </div>
       )}
 

@@ -17,7 +17,7 @@ export function ComingSoon() {
                 <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a1a]/80 via-transparent to-[#1a1a1a]"></div>
             </div>
 
-            {/* Industrial Accent Lines */}
+            {/* Líneas de Acento Industrial */}
             <div className="absolute top-0 left-0 w-full h-4 bg-[#fdc401] z-10 shadow-[0_4px_10px_rgba(0,0,0,0.5)]"></div>
             <div className="absolute bottom-0 left-0 w-full h-4 bg-[#fdc401] z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]"></div>
 
@@ -38,7 +38,7 @@ export function ComingSoon() {
                     <Construction className="w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 text-[#fdc401] drop-shadow-[0_0_20px_rgba(253,196,1,0.5)]" strokeWidth={1} />
                 </div>
 
-                {/* Main Heading (Massive) */}
+                {/* Encabezado Principal (Masivo) */}
                 <div className="text-center space-y-3 md:space-y-6 mb-10 md:mb-16 w-full">
                     <h1 className="text-[11vw] sm:text-[14vw] md:text-[10vw] lg:text-9xl font-[950] text-[#fdc401] tracking-tighter leading-none uppercase italic border-y-[6px] md:border-y-8 border-[#fdc401]/40 py-6 md:py-8 drop-shadow-[0_15px_15px_rgba(0,0,0,0.6)] animate-in slide-in-from-top-4 duration-1000">
                         PRÓXIMA<span className="text-white">MENTE</span>
@@ -57,7 +57,7 @@ export function ComingSoon() {
                     Estamos construyendo la plataforma de refacciones más robusta de <span className="text-[#fdc401]">Acayucan</span>
                 </p>
 
-                {/* WhatsApp Button (Modern/Industrial) - Full width on mobile */}
+                {/* Botón de WhatsApp (Moderno/Industrial) - Ancho completo en móvil */}
                 <div className="w-full max-w-sm md:max-w-xl px-4 md:px-0 mb-16 md:mb-24 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
                     <a 
                         href={whatsappUrl}

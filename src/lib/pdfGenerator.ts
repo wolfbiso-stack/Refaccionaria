@@ -26,11 +26,11 @@ export const generateQuotationPDF = async (
     const primaryColor = [253, 196, 1]; // #fdc401
     const date = dateStr || new Date().toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-    // --- Header / Brand ---
+    // --- Encabezado / Marca ---
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.rect(0, 0, 210, 45, 'F');
     
-    // Logo loading
+    // Carga de logo
     let logoAdded = false;
     try {
         const logoImg = new Image();
@@ -45,7 +45,7 @@ export const generateQuotationPDF = async (
         console.error('Error loading logo for PDF:', err);
     }
 
-    // Company Name & Info
+    // Nombre de la Empresa e Información
     const textX = logoAdded ? 45 : 15;
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(24);
@@ -59,7 +59,7 @@ export const generateQuotationPDF = async (
     const d = 'hotmail.com';
     doc.text(`${u}@${d} | Cel: 924 688 6220`, textX, 37);
 
-    // --- Quote Info ---
+    // --- Información de Cotización ---
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
@@ -71,7 +71,7 @@ export const generateQuotationPDF = async (
     doc.text(`Fecha: ${date}`, rightMargin, 55);
     doc.text(`Folio: ${folio}`, rightMargin, 60);
 
-    // Client Info
+    // Información del Cliente
     doc.setDrawColor(230, 230, 230);
     doc.line(15, 65, 195, 65);
     
@@ -91,7 +91,7 @@ export const generateQuotationPDF = async (
         doc.text(`RFC Corp: ${profile.rfc}`, 110, 87);
     }
 
-    // Table
+    // Tabla
     const tableData = items.map((item, index) => [
         index + 1,
         item.sku || 'N/A',
@@ -109,7 +109,7 @@ export const generateQuotationPDF = async (
         margin: { left: 15, right: 15 }
     });
 
-    // Footer
+    // Pie de página
     const finalY = (doc as any).lastAutoTable.finalY + 15;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'italic');
@@ -119,7 +119,7 @@ export const generateQuotationPDF = async (
     doc.text('3. Tiempo de entrega al siguiente día en la zona conurbada Acayucan, Oluta, Sayula y Soconusco.', 15, finalY + 15);
     doc.text('4. Entrega inmediata en sucursal si hay en existencia', 15, finalY + 20);
 
-    // Download
+    // Descargar
     const fileName = `Cotizacion_${folio.replace('#', '')}_${date.replace(/[\/]/g, '-')}.pdf`;
     doc.save(fileName);
 };

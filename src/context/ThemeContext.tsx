@@ -21,12 +21,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   useEffect(() => {
-    // Also apply a class to the root element for easier CSS targeting
+    // También aplicar una clase al elemento raíz para facilitar la segmentación CSS
     const root = document.documentElement;
     root.classList.remove('theme-modern', 'theme-industrial');
     root.classList.add(`theme-${theme}`);
     
-    // Set a data-attribute for even easier targeting or 3rd party libs
+    // Establecer un atributo de datos para una segmentación aún más fácil o bibliotecas de terceros
     root.setAttribute('data-theme', theme);
   }, [theme]);
 

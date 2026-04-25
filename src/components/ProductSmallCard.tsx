@@ -9,7 +9,7 @@ export function ProductSmallCard({ product, isFavorite, onToggleFavorite, onAddT
         onClick={onNavigate}
         className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer overflow-hidden flex flex-col sm:flex-row relative group p-4 gap-6"
       >
-        {/* Left: Image */}
+        {/* Izquierda: Imagen */}
         <div className="relative w-full sm:w-[200px] sm:shrink-0 h-[200px] flex items-center justify-center bg-gray-50/50 rounded-xl border border-gray-100">
           {product.sku && (
             <div className="absolute top-2 left-2 text-[#fdc401] text-[11px] font-black uppercase z-10 tracking-widest bg-white/80 px-1.5 py-0.5 rounded">
@@ -29,7 +29,7 @@ export function ProductSmallCard({ product, isFavorite, onToggleFavorite, onAddT
           )}
         </div>
 
-        {/* Middle and Right: Info & Actions */}
+        {/* Medio y Derecha: Información y Acciones */}
         <div className="flex flex-col flex-1 justify-between py-2">
           <div className="flex justify-between items-start gap-4">
             <div>
@@ -92,22 +92,22 @@ export function ProductSmallCard({ product, isFavorite, onToggleFavorite, onAddT
     );
   }
 
-  // Cuadrícula (Default) Layout
+  // Diseño de Cuadrícula (Predeterminado)
   return (
     <div
       onClick={onNavigate}
       className="bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer overflow-hidden flex flex-col h-full relative"
     >
-      {/* Top Image Box */}
+      {/* Caja Superior de Imagen */}
       <div className="relative h-[150px] sm:h-[180px] p-4 flex items-center justify-center bg-white border-b border-gray-50/50">
         
-        {/* SKU Badge */}
+        {/* Insignia SKU */}
         {product.sku && (
           <div className="absolute top-2 left-2 sm:top-3 sm:left-3 text-[#fdc401] text-[11px] sm:text-[13px] font-black uppercase z-10 tracking-widest">
             {product.sku}
           </div>
         )}
-        {/* Heart Icon */}
+        {/* Icono de Corazón */}
         <button 
           onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }} 
           className={`absolute top-2 right-2 sm:top-3 sm:right-3 z-10 transition-colors ${isFavorite ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-red-500'}`}
@@ -128,15 +128,15 @@ export function ProductSmallCard({ product, isFavorite, onToggleFavorite, onAddT
         )}
       </div>
 
-      {/* Info Box */}
+      {/* Caja de Información */}
       <div className="p-3 sm:p-4 flex flex-col flex-1">
 
-        {/* Title */}
+        {/* Título */}
         <h3 className="text-[12px] sm:text-[13px] font-medium text-gray-900 leading-snug line-clamp-2 h-[34px] sm:h-[38px] capitalize mb-1 mt-2">
           {product.name?.toLowerCase() || ''}
         </h3>
 
-        {/* Progress bar and details */}
+        {/* Barra de progreso y detalles */}
         <div className="mt-auto pt-2 pb-1 border-t border-gray-50">
           <div className="w-full h-[4px] bg-gray-200 overflow-hidden relative rounded-full">
             <div className={`absolute top-0 left-0 h-full ${hasStock ? 'bg-[#f2474f] w-full' : 'bg-gray-400 w-0'}`}></div>
@@ -151,7 +151,7 @@ export function ProductSmallCard({ product, isFavorite, onToggleFavorite, onAddT
           </div>
         </div>
 
-        {/* Add to Cart Button */}
+        {/* Botón Agregar al Carrito */}
         <button
           onClick={(e) => { e.stopPropagation(); onAddToCart(product, 1); }}
           className="w-full h-[36px] bg-[#fdc401] hover:bg-[#edb801] text-black text-[12px] sm:text-[13px] font-bold rounded transition-colors relative z-10 flex items-center justify-center mt-3 shadow-sm gap-2"
@@ -159,7 +159,7 @@ export function ProductSmallCard({ product, isFavorite, onToggleFavorite, onAddT
           Agregar al carrito
         </button>
 
-        {/* Action Buttons for Admins */}
+        {/* Botones de Acción para Administradores */}
         {canManage && (
           <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-100">
              <button

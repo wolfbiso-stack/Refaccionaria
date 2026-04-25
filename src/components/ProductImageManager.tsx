@@ -43,13 +43,13 @@ export function ProductImageManager({
     setError(null);
 
     try {
-      // Determine file extension
+      // Determinar extensión del archivo
       let extension = 'png'; 
       if (file instanceof File) {
         extension = file.name.split('.').pop() || 'png';
       }
 
-      // Unique name based on SKU + current length/timestamp
+      // Nombre único basado en SKU + longitud/marca de tiempo actual
       const index = currentImages.length + 1;
       const fileName = `${cleanSku}-${index}-${Date.now()}.${extension}`;
       const filePath = `${fileName}`;
@@ -186,7 +186,7 @@ export function ProductImageManager({
         )}
       </div>
 
-      {/* Thumbnails list */}
+      {/* Lista de miniaturas */}
       {currentImages.length > 0 && (
         <div className="flex gap-2 p-1 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-200">
           {currentImages.map((url, idx) => (

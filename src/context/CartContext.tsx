@@ -40,7 +40,7 @@ export const useCart = () => {
 };
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // Load initial cart from localStorage
+    // Cargar carrito inicial desde localStorage
     const [cartItems, setCartItems] = useState<CartItem[]>(() => {
         const savedCart = localStorage.getItem('refaccionaria_cart');
         return savedCart ? JSON.parse(savedCart) : [];
@@ -49,7 +49,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [showToast, setShowToast] = useState(false);
     const [lastAddedProduct, setLastAddedProduct] = useState<string | null>(null);
 
-    // Save cart to localStorage whenever it changes
+    // Guardar carrito en localStorage cada vez que cambie
     useEffect(() => {
         localStorage.setItem('refaccionaria_cart', JSON.stringify(cartItems));
     }, [cartItems]);
@@ -67,7 +67,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             return [...prev, { product, quantity }];
         });
 
-        // Trigger toast
+        // Mostrar notificación (toast)
         setLastAddedProduct(product.name);
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);

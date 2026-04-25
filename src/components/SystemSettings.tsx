@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
-import { Upload, AlertCircle, CheckCircle, Settings as SettingsIcon, FileSpreadsheet, Loader2, ArrowLeft, MapPin, Database, Layout } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, Settings as SettingsIcon, FileSpreadsheet, Loader2, ArrowLeft, MapPin, Database, Layout, Image as ImageIcon } from 'lucide-react';
 import { BannerManager } from './BannerManager';
+import { BulkImageUploader } from './BulkImageUploader';
 
 interface DbProduct {
     id: string;
@@ -26,7 +27,7 @@ interface UpdateItem {
 }
 
 interface InsertItem {
-    id: string; // Fake ID for react keys
+    id: string; // ID falso para las claves de React
     name: string;
     description?: string;
     sku: string;
@@ -56,7 +57,7 @@ const generateSlug = (name: string, sku: string) => {
 };
 
 export function SystemSettings() {
-    const [activeModule, setActiveModule] = useState<'menu' | 'inventory' | 'zipcodes' | 'page_config'>('menu');
+    const [activeModule, setActiveModule] = useState<'menu' | 'inventory' | 'zipcodes' | 'page_config' | 'image_sync'>('menu');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const cpFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -65,7 +66,7 @@ export function SystemSettings() {
     const [fileName, setFileName] = useState<string>('');
     const [progress, setProgress] = useState(0);
 
-    // Inventory Sync State
+    // Estado de Sincronización de Inventario
     const [preview, setPreview] = useState<SyncPreview>({
         toUpdate: [],
         toInsert: [],
@@ -73,7 +74,7 @@ export function SystemSettings() {
         ignoredNotInExcel: []
     });
 
-    // Zip Code State
+    // Estado de Código Postal
     const [zipCodesToInsert, setZipCodesToInsert] = useState<ZipCodeRow[]>([]);
 
     const resetState = () => {
@@ -87,7 +88,7 @@ export function SystemSettings() {
         if (cpFileInputRef.current) cpFileInputRef.current.value = '';
     };
 
-    // --- INVENTORY SYNC LOGIC --- (Omitted most of it for brevity or kept it intact)
+    // --- LÓGICA DE SINCRONIZACIÓN DE INVENTARIO ---
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -215,7 +216,7 @@ export function SystemSettings() {
         } catch (err: any) { setError(err.message); setStep('preview'); }
     };
 
-    // --- ZIP CODE LOGIC ---
+    // --- LÓGICA DE CÓDIGOS POSTALES ---
     const handleZipCodeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -297,7 +298,7 @@ export function SystemSettings() {
 
             {activeModule === 'menu' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Module 1: Inventory */}
+                    {/* Módulo 1: Inventario */}
                     <button 
                         onClick={() => setActiveModule('inventory')}
                         className="bg-white p-10 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all text-left group"
@@ -311,7 +312,7 @@ export function SystemSettings() {
                         </p>
                     </button>
 
-                    {/* Module 2: Zip Codes (Hidden as requested) */}
+                    {/* Módulo 2: Códigos Postales (Oculto según lo solicitado) */}
                     {/* 
                     <button 
                         onClick={() => setActiveModule('zipcodes')}
@@ -327,7 +328,7 @@ export function SystemSettings() {
                     </button>
                     */}
 
-                    {/* Module 3: Page Configuration (Banners) */}
+                    {/* Módulo 3: Configuración de Página (Banners) */}
                     <button 
                         onClick={() => setActiveModule('page_config')}
                         className="bg-white p-10 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all text-left group"
@@ -340,6 +341,20 @@ export function SystemSettings() {
                             Gestiona los banners promocionales y otros elementos visuales de la página principal.
                         </p>
                     </button>
+
+                    {/* Módulo 4: Sincronización de Imágenes */}
+                    <button 
+                        onClick={() => setActiveModule('image_sync')}
+                        className="bg-white p-10 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all text-left group"
+                    >
+                        <div className="bg-purple-100 w-16 h-16 rounded-2xl flex items-center justify-center text-purple-600 mb-6 group-hover:bg-purple-600 group-hover:text-white transition-colors shadow-inner">
+                            <ImageIcon className="w-8 h-8" />
+                        </div>
+                        <h2 className="text-2xl font-black text-gray-900 mb-3">Imágenes Masivas</h2>
+                        <p className="text-gray-500 font-medium leading-relaxed">
+                            Sube cientos de imágenes y asígnalas automáticamente a tus productos mediante la clave del archivo.
+                        </p>
+                    </button>
                 </div>
             ) : (
                 <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
@@ -347,20 +362,25 @@ export function SystemSettings() {
                         <div className={`p-3 rounded-2xl ${
                             activeModule === 'inventory' ? 'bg-emerald-50 text-emerald-600' : 
                             activeModule === 'zipcodes' ? 'bg-blue-50 text-blue-600' : 
+                            activeModule === 'image_sync' ? 'bg-purple-50 text-purple-600' :
                             'bg-amber-50 text-amber-600'
                         }`}>
                             {activeModule === 'inventory' ? <FileSpreadsheet className="w-6 h-6" /> : 
                              activeModule === 'zipcodes' ? <MapPin className="w-6 h-6" /> : 
+                             activeModule === 'image_sync' ? <ImageIcon className="w-6 h-6" /> :
                              <Layout className="w-6 h-6" />}
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-gray-900">
                                 {activeModule === 'inventory' ? 'Sincronización de Inventario' : 
                                  activeModule === 'zipcodes' ? 'Importación de Códigos Postales' : 
+                                 activeModule === 'image_sync' ? 'Subida Masiva de Imágenes' :
                                  'Configuración de Banners'}
                             </h2>
                             <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">
-                                {activeModule === 'page_config' ? 'Gestión Dinámica de Banners' : (fileName || 'Esperando archivo...')}
+                                {activeModule === 'page_config' ? 'Gestión Dinámica de Banners' : 
+                                 activeModule === 'image_sync' ? 'Carga de Archivos' :
+                                 (fileName || 'Esperando archivo...')}
                             </p>
                         </div>
                     </div>
@@ -375,6 +395,8 @@ export function SystemSettings() {
 
                         {activeModule === 'page_config' ? (
                             <BannerManager />
+                        ) : activeModule === 'image_sync' ? (
+                            <BulkImageUploader />
                         ) : (
                             <>
                                 {step === 'upload' && (

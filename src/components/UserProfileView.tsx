@@ -54,7 +54,7 @@ export function UserProfileView() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
-    // Profile State
+    // Estado del Perfil
     const [isEditing, setIsEditing] = useState(false);
     const [profile, setProfile] = useState<UserProfile>({
         first_name: '',
@@ -70,7 +70,7 @@ export function UserProfileView() {
     });
     const [originalProfile, setOriginalProfile] = useState<UserProfile | null>(null);
 
-    // Addresses State
+    // Estado de Direcciones
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [isAddingAddress, setIsAddingAddress] = useState(false);
     const [lookupLoading, setLookupLoading] = useState(false);
@@ -86,18 +86,18 @@ export function UserProfileView() {
         es_principal: false
     });
 
-    // Cotizaciones State
+    // Estado de Cotizaciones
     const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
     const [selectedCotizacion, setSelectedCotizacion] = useState<Cotizacion | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [dateFilter, setDateFilter] = useState('');
     
-    // Security State
+    // Estado de Seguridad
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
     
-    // Visibility States
+    // Estados de Visibilidad
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -210,19 +210,19 @@ export function UserProfileView() {
     const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Manual validation for Phone (10 digits)
+        // Validación manual para Teléfono (10 dígitos)
         if (profile.phone && !/^[0-9]{10}$/.test(profile.phone)) {
             setMessage({ type: 'error', text: 'El teléfono debe tener exactamente 10 dígitos.' });
             return;
         }
 
-        // Manual validation for Corporate Phone (10 digits)
+        // Validación manual para Teléfono Corporativo (10 dígitos)
         if (profile.is_corporate && profile.corporate_phone && !/^[0-9]{10}$/.test(profile.corporate_phone)) {
             setMessage({ type: 'error', text: 'El teléfono corporativo debe tener exactamente 10 dígitos.' });
             return;
         }
 
-        // Manual validation for RFC if corporate is enabled
+        // Validación manual para RFC si la opción corporativa está habilitada
         if (profile.is_corporate && !profile.is_rfc_valid) {
             setMessage({ type: 'error', text: 'El RFC es inválido o obligatorio para personas jurídicas.' });
             return;
@@ -489,7 +489,7 @@ export function UserProfileView() {
                                 )}
 
                                 <form onSubmit={handleSaveProfile} className="space-y-12">
-                                    {/* Personal Data Section */}
+                                    {/* Sección de Datos Personales */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-10">
                                         <div className="space-y-3">
                                             <label className="block text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Nombre(s)</label>
@@ -561,7 +561,7 @@ export function UserProfileView() {
                                         </div>
                                     </div>
 
-                                    {/* Corporate (Legal Entity) Section */}
+                                    {/* Sección Corporativa (Persona Jurídica) */}
                                     {(isEditing || profile.is_corporate) && (
                                         <div className="pt-10 border-t border-gray-100">
                                             {!profile.is_corporate && isEditing ? (
