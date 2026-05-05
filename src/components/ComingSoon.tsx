@@ -22,12 +22,12 @@ export function ComingSoon() {
             <div className="absolute bottom-0 left-0 w-full h-4 bg-[#fdc401] z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]"></div>
 
             <div className="relative z-10 max-w-6xl w-full flex flex-col items-center px-4 md:px-6">
-                
+
                 {/* Logo Section */}
                 <div className="mb-8 md:mb-12 drop-shadow-2xl animate-in fade-in zoom-in duration-1000">
-                    <img 
-                        src="/logo.png" 
-                        alt="Logo Empresa" 
+                    <img
+                        src="/logo.png"
+                        alt="Logo Empresa"
                         className="h-24 sm:h-32 md:h-40 lg:h-52 w-auto object-contain"
                     />
                 </div>
@@ -59,7 +59,7 @@ export function ComingSoon() {
 
                 {/* Botón de WhatsApp (Moderno/Industrial) - Ancho completo en móvil */}
                 <div className="w-full max-w-sm md:max-w-xl px-4 md:px-0 mb-16 md:mb-24 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-                    <a 
+                    <a
                         href={whatsappUrl}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -71,11 +71,11 @@ export function ComingSoon() {
                     </a>
                 </div>
 
-                {/* Status Indicator (75%) - More integrated and imponent */}
+                {/* Status Indicator (95%) - More integrated and imponent */}
                 <div className="flex flex-col items-center gap-4 group">
                     <div className="flex items-end gap-3 md:gap-5">
                         <span className="text-[#fdc401]/40 text-xs md:text-base font-black tracking-widest uppercase">Estado</span>
-                        <span className="text-4xl md:text-6xl font-[950] text-white italic leading-none">75%</span>
+                        <span className="text-4xl md:text-6xl font-[950] text-white italic leading-none">95%</span>
                         <span className="text-[#fdc401]/40 text-xs md:text-base font-black tracking-widest uppercase">Completo</span>
                     </div>
                     <div className="w-48 sm:w-64 md:w-96 h-2 md:h-3 bg-white/5 overflow-hidden relative border border-white/10">
