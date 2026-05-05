@@ -102,22 +102,24 @@ function App() {
 
   // 🔥 CONTROL DE VISIBILIDAD DE LA APLICACIÓN
   // Determina si se muestra la aplicación completa o la pantalla de "Próximamente"
-  // centralizando la lógica de entornos locales, Vercel y control manual.
   const shouldShowFullApp = () => {
+    const isLocalDev = import.meta.env.DEV;
+    const hostname = window.location.hostname;
+
+    // 1. Siempre mostrar si estamos en desarrollo local
+    if (isLocalDev || hostname === 'localhost' || hostname === '127.0.0.1') return true;
+
+    // 2. Mostrar en los links de prueba generados por Vercel
+    if (hostname.endsWith('.vercel.app')) return true;
+
+    // 3. Ocultar (mostrar ComingSoon) en el dominio oficial
+    if (hostname === 'cordobesarefacciones.mx' || hostname === 'www.cordobesarefacciones.mx') return false;
+
+    // 4. Control manual por variable de entorno como respaldo
     const appStatus = import.meta.env.VITE_APP_STATUS;
-    const vercelEnv = import.meta.env.VERCEL_ENV;
-    const isLocalDev = import.meta.env.DEV; // Vite expone .DEV verdadero en local
-
-    // 1. Siempre mostrar si estamos en desarrollo local (Vite natural o Vercel Dev)
-    if (isLocalDev || vercelEnv === "development") return true;
-
-    // 2. Mostrar en previsualizaciones de Vercel (Ramas / Pull Requests)
-    if (vercelEnv === "preview") return true;
-
-    // 3. Control manual por variable de entorno para forzar visualización
     if (appStatus === "dev") return true;
 
-    // 4. Producción real u otros entornos → ocultar la app
+    // Por defecto ocultar si no coincide con Vercel ni Local
     return false;
   };
 
