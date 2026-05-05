@@ -18,7 +18,7 @@ export function EmployeeFormModal({ isOpen, onClose, onSuccess, initialEmployee 
         password: '',
         first_name: '',
         last_name: '',
-        role: 'usuario' as 'admin' | 'empleado' | 'usuario'
+        role: 'usuario' as 'admin' | 'empleado' | 'usuario' | 'vip'
     });
 
     React.useEffect(() => {
@@ -29,7 +29,7 @@ export function EmployeeFormModal({ isOpen, onClose, onSuccess, initialEmployee 
                     password: '',
                     first_name: initialEmployee.first_name || '',
                     last_name: initialEmployee.last_name || '',
-                    role: (initialEmployee.role as 'admin' | 'empleado' | 'usuario') || 'usuario',
+                    role: (initialEmployee.role as 'admin' | 'empleado' | 'usuario' | 'vip') || 'usuario',
                 });
             } else {
                 setFormData({ email: '', password: '', first_name: '', last_name: '', role: 'usuario' });
@@ -163,6 +163,7 @@ export function EmployeeFormModal({ isOpen, onClose, onSuccess, initialEmployee 
                         <label className="block text-sm font-medium text-gray-700 mb-1">Rol en el Sistema <span className="text-red-500">*</span></label>
                         <select name="role" value={formData.role} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm bg-white">
                             <option value="usuario">Usuario General (Cliente)</option>
+                            <option value="vip">VIP (Cliente Especial)</option>
                             <option value="empleado">Empleado (Operativo)</option>
                             <option value="admin">Administrador (Control total)</option>
                         </select>

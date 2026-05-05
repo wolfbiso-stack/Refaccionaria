@@ -1,6 +1,6 @@
 import { Heart } from 'lucide-react';
 
-export function ProductSmallCard({ product, isFavorite, onToggleFavorite, onAddToCart, onNavigate, onEdit, onDelete, canManage, viewMode = 'grid' }: any) {
+export function ProductSmallCard({ product, isFavorite, onToggleFavorite, onAddToCart, onNavigate, onEdit, onDelete, canManage, canSeePrice, viewMode = 'grid' }: any) {
   const hasStock = product.stock > 0;
 
   if (viewMode === 'list') {
@@ -21,6 +21,7 @@ export function ProductSmallCard({ product, isFavorite, onToggleFavorite, onAddT
               src={product.image_url}
               alt={product.name}
               className="max-w-full max-h-full object-contain p-2"
+              loading="lazy"
             />
           ) : (
             <div className="flex flex-col items-center justify-center text-gray-300">
@@ -60,6 +61,11 @@ export function ProductSmallCard({ product, isFavorite, onToggleFavorite, onAddT
               <span className={`px-2.5 py-1 rounded text-xs font-black tracking-widest ${hasStock ? 'bg-[#eBfBF3] text-[#2dB97A]' : 'bg-red-50 text-red-600'}`}>
                 {product.stock} EN STOCK
               </span>
+              {canSeePrice && product.price !== undefined && (
+                <span className="ml-2 text-base font-black text-gray-900">
+                  ${product.price.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -120,6 +126,7 @@ export function ProductSmallCard({ product, isFavorite, onToggleFavorite, onAddT
             src={product.image_url}
             alt={product.name}
             className="max-w-full max-h-full object-contain"
+            loading="lazy"
           />
         ) : (
           <div className="flex flex-col items-center justify-center text-gray-300 h-full w-full bg-gray-50/50 rounded-lg">
@@ -148,6 +155,11 @@ export function ProductSmallCard({ product, isFavorite, onToggleFavorite, onAddT
                 {product.stock}
               </span>
             </span>
+            {canSeePrice && product.price !== undefined && (
+              <span className="text-xs sm:text-sm font-black text-gray-900">
+                ${product.price.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+              </span>
+            )}
           </div>
         </div>
 

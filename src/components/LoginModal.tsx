@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, LogIn, AlertCircle, UserPlus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-
+import { TurnstileWidget } from './TurnstileWidget';
 interface LoginModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -16,6 +16,14 @@ export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [turnstileToken, setTurnstileToken] = useState<string>('');
+    const [honeypot, setHoneypot] = useState('');
+    const loadTime = useRef(Date.now());
+    const [widgetKey, setWidgetKey] = useState(0);
+
+    const handleTurnstileVerify = useCallback((token: string) => {
+        setTurnstileToken(token);
+    }, []);
 
     useEffect(() => {
         if (isOpen) {
@@ -24,6 +32,10 @@ export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }
             setEmail('');
             setPassword('');
             setConfirmPassword('');
+            setTurnstileToken('');
+            setHoneypot('');
+            loadTime.current = Date.now();
+            setWidgetKey(prev => prev + 1);
         }
     }, [isOpen, initialMode]);
 
@@ -31,6 +43,34 @@ export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (honeypot) {
+            onClose();
+            return;
+        }
+
+        const timeElapsed = Date.now() - loadTime.current;
+        if (timeElapsed < 3000) {
+            setError('Por favor, tómate un momento antes de enviar el formulario.');
+            return;
+        }
+
+        if (!turnstileToken) {
+            setError('Por favor, completa la verificación de seguridad.');
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setError('Por favor, ingresa un correo electrónico válido.');
+            return;
+        }
+
+        if (mode !== 'reset' && password.length < 6) {
+            setError('La contraseña debe tener al menos 6 caracteres.');
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
@@ -47,6 +87,17 @@ export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }
         }
 
         try {
+            const { data: turnstileData, error: turnstileError } = await supabase.functions.invoke('verify-turnstile', {
+                body: { token: turnstileToken }
+            });
+
+            if (turnstileError || !turnstileData?.success) {
+                setError('Verificación de seguridad fallida, intenta nuevamente.');
+                setTurnstileToken('');
+                setWidgetKey(prev => prev + 1);
+                setLoading(false);
+                return;
+            }
             if (mode === 'reset') {
                 const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
                     redirectTo: `${window.location.origin}/auth/callback?next=/perfil`
@@ -146,6 +197,15 @@ export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6">
+                    <input 
+                        type="text" 
+                        name="website_url" 
+                        value={honeypot}
+                        onChange={(e) => setHoneypot(e.target.value)}
+                        style={{ display: 'none' }} 
+                        tabIndex={-1} 
+                        autoComplete="off" 
+                    />
                     {error && (
                         <div className={`mb-4 p-3 rounded-lg flex items-start gap-2 text-sm ${error.includes('¡Cuenta creada!') || error.includes('¡Enlace enviado!') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                             <AlertCircle className="h-5 w-5 shrink-0" />
@@ -215,6 +275,12 @@ export function LoginModal({ isOpen, onClose, onSuccess, initialMode = 'login' }
                             </div>
                         )}
                     </div>
+
+                    <TurnstileWidget 
+                        key={widgetKey}
+                        onVerify={handleTurnstileVerify} 
+                        action={mode} 
+                    />
 
                     <div className="mt-6 space-y-4">
                         <button

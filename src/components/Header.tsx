@@ -7,7 +7,7 @@ import { getSearchFilterString } from '../utils/searchUtils';
 
 interface HeaderProps {
   isAuthenticated: boolean;
-  userRole?: 'admin' | 'empleado' | 'usuario' | null;
+  userRole?: 'admin' | 'empleado' | 'usuario' | 'vip' | null;
   userProfile?: any;
   email?: string;
   onLoginClick: (mode?: 'login' | 'signup') => void;
@@ -91,6 +91,7 @@ export function Header({ isAuthenticated, userRole, userProfile, email, onLoginC
                       <span className="opacity-80">Hola, <span className="font-bold opacity-100">{userProfile?.first_name || email?.split('@')[0] || 'Usuario'}</span></span>
                       {userRole === 'admin' && <span className="text-[9px] font-black text-red-600 uppercase tracking-wider">Administrador</span>}
                       {userRole === 'empleado' && <span className="text-[9px] font-black text-blue-600 uppercase tracking-wider">Empleado</span>}
+                      {userRole === 'vip' && <span className="text-[9px] font-black text-purple-600 uppercase tracking-wider">VIP</span>}
                     </div>
                     <button onClick={() => onLogoutClick()} className="opacity-80 hover:opacity-100 transition-opacity">Cerrar Sesión</button>
                   </span>

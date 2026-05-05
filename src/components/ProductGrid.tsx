@@ -14,6 +14,7 @@ interface Product {
   slug?: string;
   description: string;
   stock: number;
+  price?: number;
   image_url: string;
   images?: string[];
 }
@@ -139,14 +140,10 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
 
   const canManageProducts = userRole === 'admin' || userRole === 'empleado';
 
-  const isFirstMount = useRef(true);
-  useEffect(() => {
-    if (isFirstMount.current) {
-      isFirstMount.current = false;
-      return;
-    }
-    setCurrentPage(1);
-  }, [searchQuery, sortBy]);
+  const handleNavigateToProduct = (productSlugOrId: string) => {
+    sessionStorage.setItem(`${stateKey}_scrollY`, window.scrollY.toString());
+    navigate(`/producto/${productSlugOrId}`);
+  };
 
 
 
@@ -179,6 +176,8 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
         query = query.order('name', { ascending: true });
       } else if (sortBy === 'name-desc') {
         query = query.order('name', { ascending: false });
+      } else if (sortBy === 'has-image') {
+        query = query.order('image_url', { ascending: false, nullsFirst: false });
       } else {
         query = query.order('created_at', { ascending: false });
       }
@@ -213,13 +212,17 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
     
     if (isFirstMountScroll.current) {
       isFirstMountScroll.current = false;
+      const savedScrollY = sessionStorage.getItem(`${stateKey}_scrollY`);
+      if (savedScrollY) {
+        setTimeout(() => {
+          window.scrollTo({ top: parseInt(savedScrollY, 10), behavior: 'instant' });
+        }, 100);
+      }
       return;
     }
-    // Scroll to top when page changes
-    if (currentPage > 1 || searchQuery || sortBy) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [fetchProducts, currentPage, searchQuery, sortBy, ITEMS_PER_PAGE]);
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [fetchProducts]);
 
   const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
 
@@ -294,6 +297,7 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
                 onChange={(e) => {
                   const newParams = new URLSearchParams(searchParams);
                   newParams.set('sort', e.target.value);
+                  newParams.set('page', '1');
                   setSearchParams(newParams);
                 }}
                 className="bg-gray-50 text-sm font-bold text-gray-900 rounded-xl px-3 py-2 border-none ring-1 ring-gray-200 outline-none focus:ring-2 focus:ring-[#fdc401] min-w-[200px]"
@@ -302,6 +306,9 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
                 <option value="stock-asc">Stock (Menor a mayor)</option>
                 <option value="name-asc">Nombre (A-Z)</option>
                 <option value="name-desc">Nombre (Z-A)</option>
+                {canManageProducts && (
+                  <option value="has-image">Con Imagen Primero</option>
+                )}
               </select>
             </div>
           </div>
@@ -328,10 +335,11 @@ export function ProductGrid({ isAuthenticated = false, userRole = null, userId, 
                 isFavorite={favoriteIds.has(product.id)}
                 onToggleFavorite={() => toggleFavorite(product.id)}
                 onAddToCart={addToCart}
-                onNavigate={() => navigate(`/producto/${product.slug || product.id}`)}
+                onNavigate={() => handleNavigateToProduct(product.slug || product.id)}
                 onEdit={() => { setProductToEdit(product); setIsAddModalOpen(true); }}
                 onDelete={(e: React.MouseEvent) => handleDeleteProduct(product.id, e)}
                 canManage={canManageProducts && isAuthenticated}
+                canSeePrice={isAuthenticated && (userRole === 'admin' || userRole === 'empleado' || userRole === 'vip')}
                 viewMode={viewMode}
               />
             ))}

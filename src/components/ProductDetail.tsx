@@ -20,6 +20,7 @@ interface Product {
   sku?: string;
   slug?: string;
   stock: number;
+  price?: number;
   image_url: string;
   images?: string[];
   created_at: string;
@@ -80,6 +81,7 @@ export function ProductDetail({ isAuthenticated = false, userRole = null, userId
   };
 
   const canManageProducts = userRole === 'admin' || userRole === 'empleado';
+  const canSeePrice = isAuthenticated && (userRole === 'admin' || userRole === 'empleado' || userRole === 'vip');
 
   const fetchProductDetails = async () => {
     try {
@@ -273,11 +275,18 @@ export function ProductDetail({ isAuthenticated = false, userRole = null, userId
                 {product.name} {product.brand ? `- ${product.brand}` : ''}
               </h1>
 
-              <div className="flex items-center gap-6 mb-6 text-sm lg:text-base">
-                <p className="font-bold text-gray-700">
+              <div className="flex flex-col gap-1 mb-6">
+                <p className="text-sm lg:text-base font-bold text-gray-700">
                   Número de Parte: <span className="text-[#fdc401]">{sku}</span>
                 </p>
-                {/* Category display removed */}
+                {canSeePrice && product.price !== undefined && (
+                  <div className="mt-3">
+                    <span className="text-2xl lg:text-3xl font-[950] text-gray-900 tracking-tighter">
+                      ${product.price.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    </span>
+                    <span className="text-xs font-black text-gray-400 ml-2 uppercase tracking-widest align-top">MXN</span>
+                  </div>
+                )}
               </div>
 
               <div className="border-t border-gray-50 pt-5 mb-5">

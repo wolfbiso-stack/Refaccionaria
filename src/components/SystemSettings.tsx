@@ -10,11 +10,13 @@ interface DbProduct {
     sku: string;
     name: string;
     stock: number;
+    price: number;
 }
 
 interface ExcelRow {
     sku: string;
     stock: number;
+    price: number;
     originalRow: any;
 }
 
@@ -24,6 +26,8 @@ interface UpdateItem {
     sku: string;
     oldStock: number;
     newStock: number;
+    oldPrice: number;
+    newPrice: number;
 }
 
 interface InsertItem {
@@ -32,6 +36,7 @@ interface InsertItem {
     description?: string;
     sku: string;
     stock: number;
+    price: number;
     slug: string;
     user_id?: string;
 }
@@ -109,7 +114,7 @@ export function SystemSettings() {
             while (hasMore) {
                 const { data, error: dbError } = await supabase
                     .from('products')
-                    .select('id, name, sku, stock, slug')
+                    .select('id, name, sku, stock, slug, price')
                     .range(start, start + limit - 1);
                     
                 if (dbError) throw dbError;
@@ -142,18 +147,29 @@ export function SystemSettings() {
 
             const excelSkuMap = new Map<string, ExcelRow>();
             jsonRows.forEach(row => {
-                let rawSku = '', rawStock = 0;
+                let rawSku = '', rawStock = 0, rawPrice = 0;
                 for (const [key, val] of Object.entries(row)) {
-                    const upperKey = key.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                    if (upperKey.includes('SKU') || upperKey === 'CODIGO' || upperKey.includes('CLAVE')) rawSku = String(val).trim();
+                    const upperKey = key.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                    if (upperKey === 'SKU' || upperKey === 'CODIGO' || upperKey === 'CLAVE') {
+                        if (!rawSku) rawSku = String(val).trim(); // Solo asigna si está vacío para evitar sobreescribir con otras columnas por si acaso
+                    }
                     else if (upperKey.includes('CANTIDAD') || upperKey.includes('STOCK') || upperKey.includes('EXIS')) {
                         rawStock = typeof val === 'number' ? val : parseInt(String(val).replace(/[^0-9.-]/g, ''), 10) || 0;
+                    }
+                    else if (upperKey === 'PRECIO 1') {
+                        rawPrice = typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.-]/g, '')) || 0;
                     }
                 }
                 if (rawSku !== "") {
                     const skuUpper = rawSku.toUpperCase();
-                    if (excelSkuMap.has(skuUpper)) excelSkuMap.get(skuUpper)!.stock += rawStock;
-                    else excelSkuMap.set(skuUpper, { sku: rawSku, stock: rawStock, originalRow: row });
+                    if (excelSkuMap.has(skuUpper)) {
+                        excelSkuMap.get(skuUpper)!.stock += rawStock;
+                        // Opcional: ¿sumar el precio o mantener el primero? Mantendremos el primero o el mayor
+                        if (rawPrice > excelSkuMap.get(skuUpper)!.price) {
+                            excelSkuMap.get(skuUpper)!.price = rawPrice;
+                        }
+                    }
+                    else excelSkuMap.set(skuUpper, { sku: rawSku, stock: rawStock, price: rawPrice, originalRow: row });
                 }
             });
 
@@ -165,7 +181,9 @@ export function SystemSettings() {
             dbProducts.forEach(dbProd => {
                 const excelMatch = excelSkuMap.get(dbProd.sku.toUpperCase());
                 if (excelMatch) {
-                    if (excelMatch.stock !== dbProd.stock) toUpdate.push({ id: dbProd.id, name: dbProd.name, sku: dbProd.sku, oldStock: dbProd.stock, newStock: excelMatch.stock });
+                    if (excelMatch.stock !== dbProd.stock || excelMatch.price !== (dbProd.price || 0)) {
+                        toUpdate.push({ id: dbProd.id, name: dbProd.name, sku: dbProd.sku, oldStock: dbProd.stock, newStock: excelMatch.stock, oldPrice: dbProd.price || 0, newPrice: excelMatch.price || 0 });
+                    }
                     else ignoredNoChange.push(dbProd);
                 } else ignoredNotInExcel.push(dbProd);
             });
@@ -176,13 +194,13 @@ export function SystemSettings() {
                     let nameVal = '', descVal = '';
                     for (const [key, val] of Object.entries(ex.originalRow)) {
                         const upperKey = key.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                        if (upperKey.includes('NOMBRE') || upperKey.includes('PRODUCTO') || upperKey.includes('DESCRIPCION')) nameVal = descVal = String(val).trim();
+                        if (upperKey.includes('NOMBRE') || upperKey.includes('PRODUCTO') || upperKey.includes('DESCRIP')) nameVal = descVal = String(val).trim();
                     }
                     if (!nameVal) nameVal = descVal = `Producto ${ex.sku}`;
                     let slugVal = generateSlug(nameVal, ex.sku), attempt = 1;
                     while (dbSlugSet.has(slugVal)) { slugVal = `${generateSlug(nameVal, ex.sku)}-${attempt}`; attempt++; }
                     dbSlugSet.add(slugVal);
-                    toInsert.push({ id: `new-${toInsert.length}`, name: nameVal, description: descVal, sku: ex.sku, stock: ex.stock, slug: slugVal, user_id: currentUserId });
+                    toInsert.push({ id: `new-${toInsert.length}`, name: nameVal, description: descVal, sku: ex.sku, stock: ex.stock, price: ex.price, slug: slugVal, user_id: currentUserId });
                 }
             });
 
@@ -202,7 +220,7 @@ export function SystemSettings() {
             let completed = 0;
             for (let i = 0; i < updates.length; i += 15) {
                 const chunk = updates.slice(i, i + 15);
-                await Promise.all(chunk.map(item => supabase.from('products').update({ stock: item.newStock }).eq('id', item.id)));
+                await Promise.all(chunk.map(item => supabase.from('products').update({ stock: item.newStock, price: item.newPrice }).eq('id', item.id)));
                 completed += chunk.length; setProgress(Math.round((completed / totalOperations) * 100));
             }
             const inserts = preview.toInsert.map(({ id, ...rest }) => rest);

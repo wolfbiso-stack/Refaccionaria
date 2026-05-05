@@ -30,7 +30,7 @@ import { PrivacyPolicyView } from './components/PrivacyPolicyView';
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
-  const [userRole, setUserRole] = useState<'admin' | 'empleado' | 'usuario' | null>(null);
+  const [userRole, setUserRole] = useState<'admin' | 'empleado' | 'usuario' | 'vip' | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
@@ -65,7 +65,7 @@ function App() {
         .single();
 
       if (!error && data) {
-        setUserRole(data.role as 'admin' | 'empleado' | 'usuario');
+        setUserRole(data.role as 'admin' | 'empleado' | 'usuario' | 'vip');
         setUserProfile(data);
       }
     } catch (err) {

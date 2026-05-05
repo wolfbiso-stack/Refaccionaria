@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Users, Plus, ShieldAlert, User, Activity } from 'lucide-react';
+import { Users, Plus, ShieldAlert, User, Activity, Star } from 'lucide-react';
 import { EmployeeFormModal } from './EmployeeFormModal';
 import { EmployeeActivityModal } from './EmployeeActivityModal';
 
@@ -9,7 +9,7 @@ export interface UserProfile {
     email: string;
     first_name?: string;
     last_name?: string;
-    role: 'admin' | 'empleado' | 'usuario';
+    role: 'admin' | 'empleado' | 'usuario' | 'vip';
 }
 
 export function EmployeeManagement() {
@@ -45,7 +45,7 @@ export function EmployeeManagement() {
 
     const filteredUsers = users.filter(user => {
         if (activeTab === 'personal') return user.role === 'admin' || user.role === 'empleado';
-        return user.role === 'usuario';
+        return user.role === 'usuario' || user.role === 'vip';
     });
 
     return (
@@ -114,10 +114,12 @@ export function EmployeeManagement() {
                                                 <div className={`p-2 rounded-full ${
                                                     emp.role === 'admin' ? 'bg-yellow-100 text-yellow-600' : 
                                                     emp.role === 'empleado' ? 'bg-blue-100 text-blue-600' : 
+                                                    emp.role === 'vip' ? 'bg-purple-100 text-purple-600' : 
                                                     'bg-gray-100 text-gray-500'
                                                 }`}>
                                                     {emp.role === 'admin' ? <ShieldAlert className="w-4 h-4" /> : 
                                                      emp.role === 'empleado' ? <Users className="w-4 h-4" /> : 
+                                                     emp.role === 'vip' ? <Star className="w-4 h-4" /> : 
                                                      <User className="w-4 h-4" />}
                                                 </div>
                                                 <span className="font-bold text-gray-900">
@@ -130,10 +132,12 @@ export function EmployeeManagement() {
                                             <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border
                                                 ${emp.role === 'admin' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' : 
                                                   emp.role === 'empleado' ? 'bg-blue-50 text-blue-800 border-blue-200' : 
+                                                  emp.role === 'vip' ? 'bg-purple-50 text-purple-800 border-purple-200' : 
                                                   'bg-gray-50 text-gray-600 border-gray-200'}
                                             `}>
                                                 {emp.role === 'admin' ? 'ADMINISTRADOR' : 
                                                  emp.role === 'empleado' ? 'EMPLEADO' : 
+                                                 emp.role === 'vip' ? 'VIP' : 
                                                  'USUARIO'}
                                             </span>
                                         </td>
